@@ -1,0 +1,45 @@
+name: examcraft_ai
+description: A premium Flutter app for academic exam preparation with AI-powered features.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.1
+  http: ^1.1.0
+  file_picker: ^8.0.0+1
+  image_picker: ^1.0.4
+  url_launcher: ^6.2.2
+  google_fonts: ^6.1.0
+  cupertino_icons: ^1.0.2
+  flutter_secure_storage: ^9.0.0
+  sqflite: ^2.3.0
+  pdf: ^3.10.4
+  printing: ^5.11.0
+  path_provider: ^2.1.1
+  image: ^4.1.3
+  path: ^1.8.3
+  http_parser: ^4.0.2
+  shared_preferences: ^2.2.2
+  intl: ^0.18.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/examcraftAI.png"
+  min_sdk_android: 21
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
