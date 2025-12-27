@@ -57,89 +57,199 @@ class _RateAppScreenState extends State<RateAppScreen> {
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () => Navigator.pop(context),
-          child: Icon(CupertinoIcons.back, color: AppColors.primary),
+          child: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.glowBorder.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              CupertinoIcons.back,
+              color: AppColors.primary,
+              size: 20,
+            ),
+          ),
         ),
         middle: Text(
           'Rate App',
           style: GoogleFonts.raleway(
             fontSize: 18,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
+            letterSpacing: 0.3,
           ),
         ),
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             children: [
+              // Header Section
               Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border),
-                ),
+                padding: EdgeInsets.symmetric(vertical: 12),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF10B981), Color(0xFF10B981).withOpacity(0.7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFF10B981).withOpacity(0.3),
+                            blurRadius: 16,
+                            offset: Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        CupertinoIcons.star_fill,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 24),
                     Text(
                       'Rate ExamCraft AI',
                       style: GoogleFonts.raleway(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
+                        letterSpacing: 0.3,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 8),
                     Text(
-                      'How would you rate your experience?',
-                      style: GoogleFonts.manrope(
+                      'How would you rate your experience with our app?',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
                         fontSize: 16,
                         color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+              SizedBox(height: 40),
+              
+              // Rating Container
+              Container(
+                padding: EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: AppColors.glowBorder.withOpacity(0.2),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: Offset(0, 8),
+                      spreadRadius: -4,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Star Rating
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(5, (index) {
                         return CupertinoButton(
-                          padding: EdgeInsets.zero,
+                          padding: EdgeInsets.symmetric(horizontal: 4),
                           onPressed: () => setState(() => _rating = index + 1),
-                          child: Icon(
-                            _rating > index ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                            color: _rating > index ? Colors.amber : AppColors.border,
-                            size: 32,
+                          child: Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: _rating > index 
+                                  ? Colors.amber.withOpacity(0.1)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              _rating > index ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                              color: _rating > index ? Colors.amber : AppColors.border,
+                              size: 36,
+                            ),
                           ),
                         );
                       }),
                     ),
-                    const SizedBox(height: 24),
-                    CupertinoTextField(
-                      controller: _commentController,
-                      placeholder: 'Leave a comment (optional)',
-                      maxLines: 3,
-                      style: GoogleFonts.manrope(),
+                    
+                    if (_rating > 0) ...[
+                      SizedBox(height: 20),
+                      Text(
+                        _getRatingText(_rating),
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                    
+                    SizedBox(height: 32),
+                    
+                    // Comment Field
+                    Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.border.withOpacity(0.5),
+                        ),
+                      ),
+                      child: CupertinoTextField(
+                        controller: _commentController,
+                        placeholder: 'Share your thoughts (optional)',
+                        maxLines: 4,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                        ),
+                        placeholderStyle: GoogleFonts.inter(
+                          color: AppColors.textSecondary,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        padding: EdgeInsets.all(16),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    
+                    SizedBox(height: 32),
+                    
+                    // Submit Button
                     Consumer<RatingProvider>(
                       builder: (context, ratingProvider, _) {
                         return Container(
                           width: double.infinity,
-                          height: 50,
+                          height: 56,
                           child: CupertinoButton(
                             color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                             onPressed: ratingProvider.isLoading ? null : _submitRating,
                             child: ratingProvider.isLoading
-                                ? const CupertinoActivityIndicator(color: Colors.white)
+                                ? CupertinoActivityIndicator(color: Colors.white)
                                 : Text(
                                     'Submit Rating',
-                                    style: GoogleFonts.raleway(
+                                    style: GoogleFonts.inter(
                                       fontWeight: FontWeight.w600,
+                                      fontSize: 16,
                                       color: Colors.white,
                                     ),
                                   ),
@@ -155,5 +265,22 @@ class _RateAppScreenState extends State<RateAppScreen> {
         ),
       ),
     );
+  }
+  
+  String _getRatingText(int rating) {
+    switch (rating) {
+      case 1:
+        return 'Poor - We\'ll do better!';
+      case 2:
+        return 'Fair - Room for improvement';
+      case 3:
+        return 'Good - Thanks for the feedback!';
+      case 4:
+        return 'Very Good - We\'re glad you like it!';
+      case 5:
+        return 'Excellent - You\'re awesome!';
+      default:
+        return '';
+    }
   }
 }

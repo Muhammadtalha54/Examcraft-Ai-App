@@ -1,3 +1,4 @@
+// this is for offline handling
 class MCQ {
   final int? localId;
   final String id;
@@ -32,6 +33,24 @@ class MCQ {
     );
   }
 
+  // New factory method for API MCQ generation response
+  factory MCQ.fromApiResponse(Map<String, dynamic> json) {
+    final options = List<String>.from(json['options'] ?? []);
+    final correctAnswer = json['correctAnswer'] ?? '';
+    final correctIndex = options.indexOf(correctAnswer);
+
+    return MCQ(
+      id: json['_id'] ??
+          json['id'] ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
+      question: json['question'] ?? '',
+      options: options,
+      correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
+      explanation: json['explanation'],
+      difficulty: json['difficulty'] ?? 'medium',
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -58,7 +77,7 @@ class MCQ {
     final options = (map['options'] as String).split('|||');
     final correctAnswer = map['correctAnswer'] as String;
     final correctIndex = options.indexOf(correctAnswer);
-    
+
     return MCQ(
       localId: map['id'],
       id: map['id']?.toString() ?? '',

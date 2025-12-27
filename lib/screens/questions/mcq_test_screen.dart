@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,11 +14,13 @@ import 'mcq_test_result_screen.dart';
 class MCQTestScreen extends StatefulWidget {
   final List<MCQ> mcqs;
   final String testTitle;
+  final int? timeLimit; // in seconds
 
   const MCQTestScreen({
     Key? key,
     required this.mcqs,
     required this.testTitle,
+    this.timeLimit,
   }) : super(key: key);
 
   @override
@@ -27,6 +30,51 @@ class MCQTestScreen extends StatefulWidget {
 class _MCQTestScreenState extends State<MCQTestScreen> {
   final Map<int, String> _userAnswers = {};
   int _currentQuestionIndex = 0;
+  Timer? _timer;
+  int _remainingSeconds = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.timeLimit != null) {
+      _remainingSeconds = widget.timeLimit!;
+      _startTimer();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        setState(() {
+          _remainingSeconds--;
+        });
+      } else {
+        timer.cancel();
+        _autoSubmitTest();
+      }
+    });
+  }
+
+  void _autoSubmitTest() {
+    AppSnackbar.show(
+      context,
+      'Time\'s up! Test submitted automatically.',
+      isError: false,
+    );
+    _submitTest(isAutoSubmit: true);
+  }
+
+  String _formatTime(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
 
   void _selectAnswer(String answer) {
     setState(() {
@@ -50,9 +98,12 @@ class _MCQTestScreenState extends State<MCQTestScreen> {
     }
   }
 
-  Future<void> _submitTest() async {
-    // Check if all questions are answered
-    if (_userAnswers.length < widget.mcqs.length) {
+  Future<void> _submitTest({bool isAutoSubmit = false}) async {
+    // Stop timer if running
+    _timer?.cancel();
+
+    // Check if all questions are answered (only for manual submit)
+    if (!isAutoSubmit && _userAnswers.length < widget.mcqs.length) {
       AppSnackbar.show(
         context,
         'Please answer all questions before submitting',
@@ -61,42 +112,53 @@ class _MCQTestScreenState extends State<MCQTestScreen> {
       return;
     }
 
-    // Prepare answers list in order
-    final answers = List.generate(
-      widget.mcqs.length,
-      (index) => _userAnswers[index] ?? '',
-    );
-
     try {
+      // Calculate results locally
+      int correctAnswers = 0;
+      final List<bool> answerResults = [];
+      
+      for (int i = 0; i < widget.mcqs.length; i++) {
+        final userAnswer = _userAnswers[i] ?? '';
+        final correctAnswer = widget.mcqs[i].options[widget.mcqs[i].correctAnswerIndex];
+        final isCorrect = userAnswer == correctAnswer;
+        
+        answerResults.add(isCorrect);
+        if (isCorrect) correctAnswers++;
+      }
+      
+      final percentage = widget.mcqs.length > 0 
+          ? (correctAnswers / widget.mcqs.length * 100).round() 
+          : 0;
+      
+      // Save to local database
       final testProvider = Provider.of<TestProvider>(context, listen: false);
-      final message = await testProvider.evaluateTest(
-        questions: widget.mcqs,
-        answers: answers,
+      await testProvider.saveTestResultLocally(
+        testTitle: widget.testTitle,
+        score: correctAnswers,
+        total: widget.mcqs.length,
+        percentage: percentage.toDouble(),
       );
 
       if (mounted) {
-        final success = testProvider.testResult != null;
-        
-        if (success) {
-          // Navigate to result screen
-          Navigator.pushReplacement(
-            context,
-            IOSPageRoute(
-              child: MCQTestResultScreen(
-                testTitle: widget.testTitle,
-                testResult: testProvider.testResult!,
-                mcqs: widget.mcqs,
-                userAnswers: _userAnswers,
-              ),
+        // Navigate to result screen
+        Navigator.pushReplacement(
+          context,
+          IOSPageRoute(
+            child: MCQTestResultScreen(
+              testTitle: widget.testTitle,
+              score: correctAnswers,
+              total: widget.mcqs.length,
+              percentage: percentage,
+              mcqs: widget.mcqs,
+              userAnswers: _userAnswers,
+              answerResults: answerResults,
             ),
-          );
-        } else {
-          AppSnackbar.show(context, message, isError: true);
-        }
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        AppSnackbar.show(context, e.toString(), isError: true);
+        AppSnackbar.show(context, 'Error saving test result', isError: true);
       }
     }
   }
@@ -119,7 +181,8 @@ class _MCQTestScreenState extends State<MCQTestScreen> {
               context: context,
               builder: (context) => CupertinoAlertDialog(
                 title: Text('Exit Test?', style: GoogleFonts.lato()),
-                content: Text('Your progress will be lost.', style: GoogleFonts.lato()),
+                content: Text('Your progress will be lost.',
+                    style: GoogleFonts.lato()),
                 actions: [
                   CupertinoDialogAction(
                     child: Text('Cancel', style: GoogleFonts.lato()),
@@ -139,13 +202,40 @@ class _MCQTestScreenState extends State<MCQTestScreen> {
           },
           child: Icon(CupertinoIcons.xmark, color: AppColors.error),
         ),
-        middle: Text(
-          widget.testTitle,
-          style: GoogleFonts.lato(
-            fontSize: context.screenWidth * 0.04,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
+        middle: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.testTitle,
+              style: GoogleFonts.lato(
+                fontSize: context.screenWidth * 0.04,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            if (widget.timeLimit != null) ...[
+              SizedBox(height: 2),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _remainingSeconds <= 60
+                      ? AppColors.error.withOpacity(0.1)
+                      : AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _formatTime(_remainingSeconds),
+                  style: GoogleFonts.lato(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _remainingSeconds <= 60
+                        ? AppColors.error
+                        : AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
       body: Column(
@@ -185,7 +275,8 @@ class _MCQTestScreenState extends State<MCQTestScreen> {
                   child: LinearProgressIndicator(
                     value: progress,
                     backgroundColor: AppColors.border,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.primary),
                     minHeight: 8,
                   ),
                 ),
@@ -218,11 +309,33 @@ class _MCQTestScreenState extends State<MCQTestScreen> {
                     ),
                   ),
                   SizedBox(height: 24),
-                  
+
                   // Options
                   ...currentMCQ.options.asMap().entries.map((entry) {
+                    final optionIndex = entry.key;
                     final option = entry.value;
                     final isSelected = selectedAnswer == option;
+                    final isCorrect = optionIndex == currentMCQ.correctAnswerIndex;
+                    final showFeedback = isSelected && selectedAnswer != null;
+                    
+                    Color? backgroundColor;
+                    Color? borderColor;
+                    
+                    if (showFeedback) {
+                      if (isCorrect) {
+                        backgroundColor = AppColors.success.withOpacity(0.1);
+                        borderColor = AppColors.success;
+                      } else {
+                        backgroundColor = AppColors.error.withOpacity(0.1);
+                        borderColor = AppColors.error;
+                      }
+                    } else if (isSelected) {
+                      backgroundColor = AppColors.primary.withOpacity(0.1);
+                      borderColor = AppColors.primary;
+                    } else {
+                      backgroundColor = AppColors.surface;
+                      borderColor = AppColors.border;
+                    }
                     
                     return GestureDetector(
                       onTap: () => _selectAnswer(option),
@@ -230,38 +343,48 @@ class _MCQTestScreenState extends State<MCQTestScreen> {
                         margin: EdgeInsets.only(bottom: 12),
                         padding: EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.surface,
-                          borderRadius: BorderRadius.circular(12),
+                          color: backgroundColor,
+                          borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isSelected ? AppColors.primary : AppColors.border,
+                            color: borderColor!,
                             width: isSelected ? 2 : 1,
                           ),
                         ),
                         child: Row(
                           children: [
                             Container(
-                              width: 24,
-                              height: 24,
+                              width: 28,
+                              height: 28,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isSelected ? AppColors.primary : Colors.transparent,
+                                color: showFeedback
+                                    ? (isCorrect ? AppColors.success : AppColors.error)
+                                    : (isSelected ? AppColors.primary : Colors.transparent),
                                 border: Border.all(
-                                  color: isSelected ? AppColors.primary : AppColors.border,
+                                  color: showFeedback
+                                      ? (isCorrect ? AppColors.success : AppColors.error)
+                                      : (isSelected ? AppColors.primary : AppColors.border),
                                   width: 2,
                                 ),
                               ),
-                              child: isSelected
-                                  ? Icon(CupertinoIcons.checkmark, size: 14, color: Colors.white)
-                                  : null,
+                              child: showFeedback
+                                  ? Icon(
+                                      isCorrect ? CupertinoIcons.checkmark : CupertinoIcons.xmark,
+                                      size: 16,
+                                      color: Colors.white,
+                                    )
+                                  : (isSelected
+                                      ? Icon(CupertinoIcons.checkmark, size: 14, color: Colors.white)
+                                      : null),
                             ),
-                            SizedBox(width: 12),
+                            SizedBox(width: 16),
                             Expanded(
                               child: Text(
                                 option,
-                                style: GoogleFonts.lato(
+                                style: GoogleFonts.inter(
                                   fontSize: 15,
                                   color: AppColors.textPrimary,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                                 ),
                               ),
                             ),
@@ -293,7 +416,7 @@ class _MCQTestScreenState extends State<MCQTestScreen> {
                       onPressed: _previousQuestion,
                       child: Text(
                         'Previous',
-                        style: GoogleFonts.lato(
+                        style: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
@@ -303,28 +426,26 @@ class _MCQTestScreenState extends State<MCQTestScreen> {
                   ),
                 if (_currentQuestionIndex > 0) SizedBox(width: 12),
                 Expanded(
-                  child: Consumer<TestProvider>(
-                    builder: (context, testProvider, _) {
+                  child: CupertinoButton(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                    onPressed: () {
                       final isLastQuestion = _currentQuestionIndex == widget.mcqs.length - 1;
-                      
-                      return CupertinoButton(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(12),
-                        onPressed: testProvider.isLoading
-                            ? null
-                            : (isLastQuestion ? _submitTest : _nextQuestion),
-                        child: testProvider.isLoading
-                            ? CupertinoActivityIndicator(color: Colors.white)
-                            : Text(
-                                isLastQuestion ? 'Submit Test' : 'Next',
-                                style: GoogleFonts.lato(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                      );
+                      if (isLastQuestion) {
+                        _submitTest();
+                      } else {
+                        _nextQuestion();
+                      }
                     },
+                    child: Text(
+                      _currentQuestionIndex == widget.mcqs.length - 1 ? 'Submit Test' : 'Next',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ],

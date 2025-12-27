@@ -47,6 +47,21 @@ class TestProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> saveTestResultLocally({
+    required String testTitle,
+    required int score,
+    required int total,
+    required double percentage,
+  }) async {
+    final testResult = TestResult(
+      testTitle: testTitle,
+      score: score,
+      total: total,
+      percentage: percentage,
+    );
+    await _repository.saveTestResultLocally(testResult);
+  }
+
   void clearTestResult() {
     _testResult = null;
     notifyListeners();

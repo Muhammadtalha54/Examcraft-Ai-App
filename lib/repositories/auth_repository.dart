@@ -7,8 +7,12 @@ class AuthRepository {
     final response = await AuthApi.login(email: email, password: password);
     
     if (response.success && response.data != null) {
-      final userData = response.data!['data']['user'];
-      return User.fromJson(userData);
+      final userData = response.data!['data']?['user'];
+      if (userData != null) {
+        return User.fromJson(userData);
+      } else {
+        throw ApiException('Invalid response format');
+      }
     } else {
       throw ApiException(response.message);
     }
@@ -22,8 +26,12 @@ class AuthRepository {
     );
     
     if (response.success && response.data != null) {
-      final userData = response.data!['data']['user'];
-      return User.fromJson(userData);
+      final userData = response.data!['data']?['user'];
+      if (userData != null) {
+        return User.fromJson(userData);
+      } else {
+        throw ApiException('Invalid response format');
+      }
     } else {
       throw ApiException(response.message);
     }

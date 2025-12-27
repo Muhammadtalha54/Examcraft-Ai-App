@@ -1,9 +1,9 @@
 import 'dart:io';
+import 'package:examcraft_ai/models/question_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../providers/generate_provider.dart';
 import '../../widgets/common/app_button.dart';
@@ -13,17 +13,18 @@ import '../../widgets/common/media_query_helper.dart';
 import '../../widgets/common/snackbar.dart';
 import '../../widgets/common/ios_transition.dart';
 import '../../utils/validators.dart';
-import '../questions/mcq_display_screen.dart';
+import '../../utils/pdf_helper.dart';
+import '../questions/long_questions_display_screen.dart';
 
-class MCQGenerationScreen extends StatefulWidget {
-  const MCQGenerationScreen({Key? key}) : super(key: key);
+class LongQuestionsScreen extends StatefulWidget {
+  const LongQuestionsScreen({Key? key}) : super(key: key);
 
   @override
-  State<MCQGenerationScreen> createState() => _MCQGenerationScreenState();
+  State<LongQuestionsScreen> createState() => _LongQuestionsScreenState();
 }
 
-class _MCQGenerationScreenState extends State<MCQGenerationScreen> {
-  final _countController = TextEditingController(text: '10');
+class _LongQuestionsScreenState extends State<LongQuestionsScreen> {
+  final _countController = TextEditingController(text: '3');
   File? _selectedFile;
   String _selectedDifficulty = 'medium';
 
@@ -53,23 +54,7 @@ class _MCQGenerationScreenState extends State<MCQGenerationScreen> {
     }
   }
 
-  // Future<void> _pickImage() async {
-  //   try {
-  //     final picker = ImagePicker();
-  //     final image = await picker.pickImage(source: ImageSource.gallery);
-
-  //     if (image != null) {
-  //       setState(() {
-  //         _selectedFile = File(image.path);
-  //       });
-  //     }
-  //   } catch (e) {
-  //     AppSnackbar.show(context, 'Error picking image: ${e.toString()}',
-  //         isError: true);
-  //   }
-  // }
-
-  Future<void> _generateMCQs() async {
+  Future<void> _generateQuestions() async {
     if (_selectedFile == null) {
       AppSnackbar.show(context, 'Please select a PDF file', isError: true);
       return;
@@ -85,23 +70,23 @@ class _MCQGenerationScreenState extends State<MCQGenerationScreen> {
     try {
       final generateProvider =
           Provider.of<GenerateProvider>(context, listen: false);
-      final message = await generateProvider.generateMCQs(
+      final message = await generateProvider.generateLongQuestions(
         pdfPath: _selectedFile!.path,
         count: count,
         difficulty: _selectedDifficulty,
       );
 
       if (mounted) {
-        final success = generateProvider.mcqs != null;
+        final success = generateProvider.questions != null;
         AppSnackbar.show(context, message, isError: !success);
 
-        if (success && generateProvider.mcqs!.isNotEmpty) {
+        if (success && generateProvider.questions!.isNotEmpty) {
           Navigator.push(
             context,
             IOSPageRoute(
-              child: MCQDisplayScreen(
-                mcqs: generateProvider.mcqs!,
-                title: 'MCQ Questions',
+              child: LongQuestionsDisplayScreen(
+                questions: generateProvider.questions!,
+                title: 'Long Answer Questions',
               ),
             ),
           );
@@ -111,6 +96,23 @@ class _MCQGenerationScreenState extends State<MCQGenerationScreen> {
       if (mounted) {
         AppSnackbar.show(context, e.toString(), isError: true);
       }
+    }
+  }
+
+  Future<void> _exportToPDF(List<Question> questions) async {
+    try {
+      final questionMaps =
+          questions.map((question) => question.toJson()).toList();
+      final filePath = await PDFHelper.generateAndSavePDF(
+        title:
+            'Long Answer Questions - ${_selectedDifficulty.toUpperCase()} Level',
+        questions: questionMaps,
+        type: 'long',
+      );
+      AppSnackbar.show(context, 'PDF saved to: $filePath');
+    } catch (e) {
+      AppSnackbar.show(context, 'Error exporting PDF: ${e.toString()}',
+          isError: true);
     }
   }
 
@@ -142,7 +144,7 @@ class _MCQGenerationScreenState extends State<MCQGenerationScreen> {
           ),
         ),
         middle: Text(
-          'Generate MCQs',
+          'Long Questions',
           style: GoogleFonts.raleway(
             fontSize: context.screenWidth * 0.045,
             fontWeight: FontWeight.bold,
@@ -174,7 +176,7 @@ class _MCQGenerationScreenState extends State<MCQGenerationScreen> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'Choose a PDF file  to generate questions from',
+                      'Upload a PDF file to generate detailed long answer questions',
                       style: GoogleFonts.inter(
                         fontSize: context.screenWidth * 0.038,
                         color: AppColors.textSecondary,
@@ -187,11 +189,75 @@ class _MCQGenerationScreenState extends State<MCQGenerationScreen> {
               SizedBox(height: 24),
 
               // Upload Section
-              _buildUploadButton(
-                'Upload PDF',
-                CupertinoIcons.doc_text_fill,
-                _pickFile,
-                [AppColors.primary, AppColors.primary.withOpacity(0.7)],
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: _pickFile,
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.glowBorder.withOpacity(0.2),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: Offset(0, 8),
+                        spreadRadius: -4,
+                      ),
+                      BoxShadow(
+                        color: Color(0xFF8B5CF6).withOpacity(0.1),
+                        blurRadius: 16,
+                        offset: Offset(0, 4),
+                        spreadRadius: -2,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0xFF8B5CF6),
+                              Color(0xFF8B5CF6).withOpacity(0.7)
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFF8B5CF6).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          CupertinoIcons.doc_text_fill,
+                          size: 28,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        '  Upload PDF  ',
+                        style: GoogleFonts.inter(
+                          fontSize: context.screenWidth * 0.035,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
 
               if (_selectedFile != null) ...[
@@ -365,89 +431,28 @@ class _MCQGenerationScreenState extends State<MCQGenerationScreen> {
               Consumer<GenerateProvider>(
                 builder: (context, generateProvider, _) {
                   return AppButton(
-                    text: 'Generate MCQs',
-                    onPressed: _generateMCQs,
+                    text: 'Generate Long Questions',
+                    onPressed: _generateQuestions,
                     isLoading: generateProvider.isLoading,
                   );
                 },
               ),
+              SizedBox(height: 16),
+              Consumer<GenerateProvider>(
+                builder: (context, generateProvider, _) {
+                  if (generateProvider.questions != null &&
+                      generateProvider.questions!.isNotEmpty) {
+                    return AppButton(
+                      text: 'Export to PDF',
+                      onPressed: () =>
+                          _exportToPDF(generateProvider.questions!),
+                    );
+                  }
+                  return SizedBox.shrink();
+                },
+              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUploadButton(
-    String text,
-    IconData icon,
-    VoidCallback onPressed,
-    List<Color> gradientColors,
-  ) {
-    return CupertinoButton(
-      padding: EdgeInsets.zero,
-      onPressed: onPressed,
-      child: Container(
-        height: 120,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: AppColors.glowBorder.withOpacity(0.2),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: Offset(0, 8),
-              spreadRadius: -4,
-            ),
-            BoxShadow(
-              color: gradientColors[0].withOpacity(0.1),
-              blurRadius: 16,
-              offset: Offset(0, 4),
-              spreadRadius: -2,
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: gradientColors,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: gradientColors[0].withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Icon(
-                icon,
-                size: 28,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(height: 12),
-            Text(
-              text,
-              style: GoogleFonts.inter(
-                fontSize: context.screenWidth * 0.035,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
         ),
       ),
     );

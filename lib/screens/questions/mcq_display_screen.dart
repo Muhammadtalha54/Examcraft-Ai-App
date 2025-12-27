@@ -2,15 +2,13 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import '../../providers/generate_provider.dart';
 import '../../models/mcq_model.dart';
 import '../../widgets/common/app_colors.dart';
-import '../../widgets/common/snackbar.dart';
 import '../../widgets/common/media_query_helper.dart';
 import '../../widgets/common/ios_transition.dart';
 import '../../utils/pdf_generator.dart';
-import 'mcq_test_screen.dart';
+import '../../widgets/common/snackbar.dart';
+import 'mcq_test_setup_screen.dart';
 
 class MCQDisplayScreen extends StatefulWidget {
   final List<MCQ> mcqs;
@@ -40,12 +38,12 @@ class _MCQDisplayScreenState extends State<MCQDisplayScreen> {
       );
 
       if (mounted) {
-        AppSnackbar.show(context, 'PDF saved to: ${pdfFile.path}');
+        AppSnackbar.show(context, 'PDF saved successfully!');
         await PdfGenerator.sharePdf(pdfFile);
       }
     } catch (e) {
       if (mounted) {
-        AppSnackbar.show(context, 'Error generating PDF: $e', isError: true);
+        AppSnackbar.show(context, 'Error generating PDF', isError: true);
       }
     } finally {
       if (mounted) {
@@ -58,7 +56,7 @@ class _MCQDisplayScreenState extends State<MCQDisplayScreen> {
     Navigator.push(
       context,
       IOSPageRoute(
-        child: MCQTestScreen(
+        child: MCQTestSetupScreen(
           mcqs: widget.mcqs,
           testTitle: widget.title,
         ),
@@ -76,194 +74,224 @@ class _MCQDisplayScreenState extends State<MCQDisplayScreen> {
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () => Navigator.pop(context),
-          child: Icon(CupertinoIcons.back, color: AppColors.primary),
+          child: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.glowBorder.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              CupertinoIcons.back,
+              color: AppColors.primary,
+              size: 20,
+            ),
+          ),
         ),
         middle: Text(
-          widget.title,
-          style: GoogleFonts.lato(
+          'MCQs Generated',
+          style: GoogleFonts.raleway(
             fontSize: context.screenWidth * 0.045,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
+            letterSpacing: 0.3,
           ),
         ),
       ),
-      body: Column(
-        children: [
-          // Action buttons
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              border: Border(bottom: BorderSide(color: AppColors.border)),
-            ),
-            child: Column(
-              children: [
-                // Test button
-                SizedBox(
-                  width: double.infinity,
-                  child: CupertinoButton(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12),
-                    onPressed: _startTest,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(CupertinoIcons.play_fill, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Start Test',
-                          style: GoogleFonts.lato(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            children: [
+              // Success message
+              Container(
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.success.withOpacity(0.3),
+                    width: 2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.success.withOpacity(0.1),
+                      blurRadius: 16,
+                      offset: Offset(0, 4),
+                      spreadRadius: -2,
+                    ),
+                  ],
                 ),
-                SizedBox(height: 12),
-                // PDF download buttons
-                Row(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: CupertinoButton(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        color: AppColors.primary.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(12),
-                        onPressed: _isGeneratingPdf ? null : () => _downloadPdf(includeAnswers: true),
-                        child: _isGeneratingPdf
-                            ? CupertinoActivityIndicator(color: Colors.white)
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(CupertinoIcons.doc_text, size: 18),
-                                  SizedBox(width: 6),
-                                  Text('With Answers', style: GoogleFonts.lato(fontSize: 13, fontWeight: FontWeight.w600)),
-                                ],
-                              ),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.success, AppColors.success.withOpacity(0.7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.success.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        CupertinoIcons.checkmark_alt,
+                        size: 32,
+                        color: Colors.white,
                       ),
                     ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: CupertinoButton(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        color: AppColors.primary.withOpacity(0.6),
-                        borderRadius: BorderRadius.circular(12),
-                        onPressed: _isGeneratingPdf ? null : () => _downloadPdf(includeAnswers: false),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(CupertinoIcons.doc, size: 18),
-                            SizedBox(width: 6),
-                            Text('Questions Only', style: GoogleFonts.lato(fontSize: 13, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
+                    SizedBox(height: 16),
+                    Text(
+                      'MCQs Generated Successfully!',
+                      style: GoogleFonts.raleway(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      '${widget.mcqs.length} questions ready for you',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-
-          // MCQs list
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.all(16),
-              itemCount: widget.mcqs.length,
-              itemBuilder: (context, index) {
-                final mcq = widget.mcqs[index];
-                return Container(
-                  margin: EdgeInsets.only(bottom: 20),
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+              ),
+              
+              SizedBox(height: 32),
+              
+              // Action buttons
+              Container(
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.glowBorder.withOpacity(0.2),
+                    width: 1,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Q${index + 1}',
-                        style: GoogleFonts.lato(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: Offset(0, 8),
+                      spreadRadius: -4,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Start Test Button
+                    Container(
+                      width: double.infinity,
+                      height: 56,
+                      child: CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16),
+                        onPressed: _startTest,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(CupertinoIcons.play_fill, size: 20, color: Colors.white),
+                            SizedBox(width: 12),
+                            Text(
+                              'Start MCQ Test',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        mcq.question,
-                        style: GoogleFonts.lato(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      
-                      // Options
-                      ...mcq.options.asMap().entries.map((entry) {
-                        final optIndex = entry.key;
-                        final option = entry.value;
-                        final isCorrect = optIndex == mcq.correctAnswerIndex;
-                        
-                        return Container(
-                          margin: EdgeInsets.only(bottom: 8),
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isCorrect ? AppColors.success.withOpacity(0.1) : AppColors.background,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isCorrect ? AppColors.success : AppColors.border,
+                    ),
+                    
+                    SizedBox(height: 16),
+                    
+                    // Download buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 48,
+                            child: CupertinoButton(
+                              padding: EdgeInsets.zero,
+                              color: AppColors.secondary,
+                              borderRadius: BorderRadius.circular(12),
+                              onPressed: _isGeneratingPdf ? null : () => _downloadPdf(includeAnswers: true),
+                              child: _isGeneratingPdf
+                                  ? CupertinoActivityIndicator(color: Colors.white)
+                                  : Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(CupertinoIcons.doc_text_fill, size: 16, color: Colors.white),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'With Answers',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 24,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isCorrect ? AppColors.success : AppColors.border,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    String.fromCharCode(65 + optIndex),
-                                    style: GoogleFonts.lato(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            height: 48,
+                            child: CupertinoButton(
+                              padding: EdgeInsets.zero,
+                              color: AppColors.border,
+                              borderRadius: BorderRadius.circular(12),
+                              onPressed: _isGeneratingPdf ? null : () => _downloadPdf(includeAnswers: false),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(CupertinoIcons.doc_fill, size: 16, color: AppColors.textPrimary),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Questions Only',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  option,
-                                  style: GoogleFonts.lato(
-                                    fontSize: 14,
-                                    color: AppColors.textPrimary,
-                                    fontWeight: isCorrect ? FontWeight.w600 : FontWeight.normal,
-                                  ),
-                                ),
-                              ),
-                              if (isCorrect)
-                                Icon(CupertinoIcons.checkmark_circle_fill, color: AppColors.success, size: 20),
-                            ],
+                            ),
                           ),
-                        );
-                      }).toList(),
-                    ],
-                  ),
-                );
-              },
-            ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

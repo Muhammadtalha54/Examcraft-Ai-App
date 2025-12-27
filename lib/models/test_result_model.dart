@@ -1,5 +1,6 @@
 class TestResult {
   final int? localId;
+  final String testTitle;
   final int score;
   final int total;
   final double percentage;
@@ -7,6 +8,7 @@ class TestResult {
 
   TestResult({
     this.localId,
+    required this.testTitle,
     required this.score,
     required this.total,
     required this.percentage,
@@ -15,6 +17,7 @@ class TestResult {
 
   Map<String, dynamic> toMap() {
     return {
+      'testTitle': testTitle,
       'score': score,
       'total': total,
       'percentage': percentage,
@@ -25,6 +28,7 @@ class TestResult {
   factory TestResult.fromMap(Map<String, dynamic> map) {
     return TestResult(
       localId: map['id'],
+      testTitle: map['testTitle'] ?? 'Untitled Test',
       score: map['score'],
       total: map['total'],
       percentage: (map['percentage'] as num).toDouble(),

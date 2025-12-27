@@ -11,6 +11,7 @@ class MCQCard extends StatelessWidget {
   final int questionNumber;
   final String? selectedAnswer;
   final bool showCorrectAnswer;
+  final bool showInstantFeedback;
   final Function(String) onAnswerSelected;
 
   const MCQCard({
@@ -19,6 +20,7 @@ class MCQCard extends StatelessWidget {
     required this.questionNumber,
     this.selectedAnswer,
     this.showCorrectAnswer = false,
+    this.showInstantFeedback = false,
     required this.onAnswerSelected,
   }) : super(key: key);
 
@@ -92,14 +94,24 @@ class MCQCard extends StatelessWidget {
             final option = entry.value;
             final optionLabel = String.fromCharCode(65 + index); // A, B, C, D
             
+            bool isCorrect = false;
+            bool isIncorrect = false;
+            
+            if (showInstantFeedback && selectedAnswer != null) {
+              isCorrect = index == mcq.correctAnswerIndex;
+              isIncorrect = selectedAnswer == option && index != mcq.correctAnswerIndex;
+            } else if (showCorrectAnswer) {
+              isCorrect = index == mcq.correctAnswerIndex;
+              isIncorrect = selectedAnswer == option && index != mcq.correctAnswerIndex;
+            }
+            
             return OptionWidget(
               label: optionLabel,
               text: option,
               isSelected: selectedAnswer == option,
-              isCorrect: showCorrectAnswer && index == mcq.correctAnswerIndex,
-              isIncorrect: showCorrectAnswer && 
-                          selectedAnswer == option && 
-                          index != mcq.correctAnswerIndex,
+              isCorrect: isCorrect,
+              isIncorrect: isIncorrect,
+              showInstantFeedback: showInstantFeedback,
               onTap: () => onAnswerSelected(option),
             );
           }).toList(),

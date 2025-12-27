@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_colors.dart';
 import '../../widgets/common/app_textfield.dart';
+import '../../models/mcq_model.dart';
 import 'mcq_practice_test_screen.dart';
 
 class TestIntroScreen extends StatefulWidget {
@@ -13,7 +14,7 @@ class TestIntroScreen extends StatefulWidget {
   final String difficulty;
   final bool timerEnabled;
   final int timerMinutes;
-  final Map<String, dynamic> mcqData;
+  final List<MCQ> mcqs;
 
   const TestIntroScreen({
     Key? key,
@@ -22,7 +23,7 @@ class TestIntroScreen extends StatefulWidget {
     required this.difficulty,
     required this.timerEnabled,
     required this.timerMinutes,
-    required this.mcqData,
+    required this.mcqs,
   }) : super(key: key);
 
   @override
@@ -61,7 +62,7 @@ class _TestIntroScreenState extends State<TestIntroScreen> {
               difficulty: widget.difficulty,
               timerEnabled: widget.timerEnabled,
               timerMinutes: widget.timerMinutes,
-              mcqData: widget.mcqData,
+              mcqs: widget.mcqs,
             ),
           ),
         );

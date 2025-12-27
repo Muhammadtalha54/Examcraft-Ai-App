@@ -37,7 +37,7 @@ class GenerateRepository {
 
       if (data['success'] == true) {
         final mcqs = (data['data']['mcqs'] as List)
-            .map((json) => MCQ.fromJson(json))
+            .map((json) => MCQ.fromApiResponse(json))
             .toList();
         
         // Save to SQLite

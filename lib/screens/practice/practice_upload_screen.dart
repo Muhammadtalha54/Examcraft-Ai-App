@@ -3,12 +3,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_colors.dart';
 import '../../widgets/common/media_query_helper.dart';
 import '../../widgets/common/snackbar.dart';
-import '../../services/api_service.dart';
+import '../../providers/generate_provider.dart';
+import '../../utils/pdf_helper.dart';
+import '../../models/mcq_model.dart';
 import 'test_intro_screen.dart';
 
 class PracticeUploadScreen extends StatefulWidget {
@@ -42,18 +44,6 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
     }
   }
 
-  Future<void> _pickImage() async {
-    try {
-      final picker = ImagePicker();
-      final image = await picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        setState(() => _selectedFile = File(image.path));
-      }
-    } catch (e) {
-      AppSnackbar.show(context, 'Error picking image', isError: true);
-    }
-  }
-
   void _generateTest() async {
     if (_selectedFile == null) {
       AppSnackbar.show(context, 'Please select a file', isError: true);
@@ -63,13 +53,16 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final result = await ApiService.generateMCQTest(
-        file: _selectedFile!,
-        totalQuestions: _mcqCount,
+      final generateProvider =
+          Provider.of<GenerateProvider>(context, listen: false);
+
+      final message = await generateProvider.generateMCQs(
+        pdfPath: _selectedFile!.path,
+        count: _mcqCount,
         difficulty: _difficulties[_selectedDifficulty].toLowerCase(),
       );
 
-      if (result['success'] == true && result['data'] != null) {
+      if (generateProvider.mcqs != null && generateProvider.mcqs!.isNotEmpty) {
         Navigator.push(
           context,
           CupertinoPageRoute(
@@ -79,19 +72,32 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
               difficulty: _difficulties[_selectedDifficulty],
               timerEnabled: _timerEnabled,
               timerMinutes: _timerMinutes,
-              mcqData: result['data'],
+              mcqs: generateProvider.mcqs!,
             ),
           ),
         );
       } else {
-        AppSnackbar.show(
-            context, result['message'] ?? 'Failed to generate test',
-            isError: true);
+        AppSnackbar.show(context, message, isError: true);
       }
     } catch (e) {
       AppSnackbar.show(context, e.toString(), isError: true);
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _exportToPDF(List<MCQ> mcqs) async {
+    try {
+      final mcqMaps = mcqs.map((mcq) => mcq.toJson()).toList();
+      final filePath = await PDFHelper.generateAndSavePDF(
+        title: 'Practice Test - ${_difficulties[_selectedDifficulty]} Level',
+        questions: mcqMaps,
+        type: 'mcq',
+      );
+      AppSnackbar.show(context, 'PDF saved successfully to Downloads');
+    } catch (e) {
+      AppSnackbar.show(context, 'Error exporting PDF: ${e.toString()}',
+          isError: true);
     }
   }
 
@@ -105,53 +111,206 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () => Navigator.pop(context),
-          child: Icon(CupertinoIcons.back, color: AppColors.primary),
+          child: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.glowBorder.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              CupertinoIcons.back,
+              color: AppColors.primary,
+              size: 20,
+            ),
+          ),
         ),
         middle: Text(
           'Practice Test',
           style: GoogleFonts.raleway(
             fontSize: 18,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
+            letterSpacing: 0.3,
           ),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionTitle('Upload Content'),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                      child: _buildUploadCard(
-                          'PDF File', CupertinoIcons.doc_text, _pickFile)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                      child: _buildUploadCard(
-                          'Image', CupertinoIcons.photo, _pickImage)),
-                ],
+              // Header Section
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Upload Content',
+                      style: GoogleFonts.raleway(
+                        fontSize: context.screenWidth * 0.055,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Choose content to create your personalized practice test',
+                      style: GoogleFonts.inter(
+                        fontSize: context.screenWidth * 0.038,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              SizedBox(height: 24),
+
+              // Upload Section
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: _pickFile,
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.glowBorder.withOpacity(0.2),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: Offset(0, 8),
+                        spreadRadius: -4,
+                      ),
+                      BoxShadow(
+                        color: Color(0xFFEF4444).withOpacity(0.1),
+                        blurRadius: 16,
+                        offset: Offset(0, 4),
+                        spreadRadius: -2,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0xFFEF4444),
+                              Color(0xFFEF4444).withOpacity(0.7)
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFFEF4444).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          CupertinoIcons.doc_text_fill,
+                          size: 28,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        'Upload PDF',
+                        style: GoogleFonts.inter(
+                          fontSize: context.screenWidth * 0.035,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               if (_selectedFile != null) ...[
-                const SizedBox(height: 16),
+                SizedBox(height: 20),
                 _buildSelectedFile(),
               ],
-              const SizedBox(height: 32),
-              _buildSectionTitle('Test Configuration'),
-              const SizedBox(height: 20),
-              _buildMCQCounter(),
-              const SizedBox(height: 20),
-              _buildDifficultySelector(),
-              const SizedBox(height: 20),
-              _buildTimerSection(),
-              const SizedBox(height: 40),
+
+              SizedBox(height: 40),
+
+              // Configuration Section
+              Container(
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.glowBorder.withOpacity(0.2),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: Offset(0, 8),
+                      spreadRadius: -4,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Test Configuration',
+                      style: GoogleFonts.raleway(
+                        fontSize: context.screenWidth * 0.05,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                    _buildMCQCounter(),
+                    SizedBox(height: 24),
+                    _buildDifficultySelector(),
+                    SizedBox(height: 24),
+                    _buildTimerSection(),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 32),
               AppButton(
                 text: 'Generate Test',
                 onPressed: _generateTest,
                 isLoading: _isLoading,
+              ),
+              SizedBox(height: 16),
+              Consumer<GenerateProvider>(
+                builder: (context, generateProvider, _) {
+                  if (generateProvider.mcqs != null &&
+                      generateProvider.mcqs!.isNotEmpty) {
+                    return AppButton(
+                      text: 'Export to PDF',
+                      onPressed: () => _exportToPDF(generateProvider.mcqs!),
+                    );
+                  }
+                  return SizedBox.shrink();
+                },
               ),
             ],
           ),
@@ -160,77 +319,79 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.raleway(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-      ),
-    );
-  }
-
-  Widget _buildUploadCard(String title, IconData icon, VoidCallback onTap) {
-    return CupertinoButton(
-      padding: EdgeInsets.zero,
-      onPressed: onTap,
-      child: Container(
-        height: 100,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: AppColors.primary),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: GoogleFonts.manrope(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildSelectedFile() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.success),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.success.withOpacity(0.3),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.success.withOpacity(0.1),
+            blurRadius: 16,
+            offset: Offset(0, 4),
+            spreadRadius: -2,
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Icon(CupertinoIcons.checkmark_circle_fill, color: AppColors.success),
-          const SizedBox(width: 12),
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              CupertinoIcons.checkmark_circle_fill,
+              color: AppColors.success,
+              size: 24,
+            ),
+          ),
+          SizedBox(width: 16),
           Expanded(
-            child: Text(
-              _selectedFile!.path.split('/').last,
-              style: GoogleFonts.manrope(
-                  fontSize: 14, color: AppColors.textPrimary),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'File Selected',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  _selectedFile!.path.split('/').last,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
           CupertinoButton(
             padding: EdgeInsets.zero,
             onPressed: () => setState(() => _selectedFile = null),
-            child: Icon(CupertinoIcons.xmark_circle, color: AppColors.error),
+            child: Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                CupertinoIcons.xmark,
+                color: AppColors.error,
+                size: 20,
+              ),
+            ),
           ),
         ],
       ),
@@ -239,20 +400,22 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
 
   Widget _buildMCQCounter() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: AppColors.border.withOpacity(0.5),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             'Number of Questions',
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.inter(
               fontSize: 16,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
@@ -263,25 +426,32 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
                 onPressed:
                     _mcqCount > 5 ? () => setState(() => _mcqCount--) : null,
                 child: Container(
-                  width: 32,
-                  height: 32,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.2),
+                    ),
                   ),
-                  child: Icon(CupertinoIcons.minus,
-                      size: 16, color: AppColors.primary),
+                  child: Icon(
+                    CupertinoIcons.minus,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
               Container(
-                width: 50,
+                width: 60,
                 alignment: Alignment.center,
                 child: Text(
                   '$_mcqCount',
                   style: GoogleFonts.raleway(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
+                    letterSpacing: 0.3,
                   ),
                 ),
               ),
@@ -290,14 +460,20 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
                 onPressed:
                     _mcqCount < 50 ? () => setState(() => _mcqCount++) : null,
                 child: Container(
-                  width: 32,
-                  height: 32,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.2),
+                    ),
                   ),
-                  child: Icon(CupertinoIcons.plus,
-                      size: 16, color: AppColors.primary),
+                  child: Icon(
+                    CupertinoIcons.plus,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ],
@@ -309,37 +485,57 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
 
   Widget _buildDifficultySelector() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: AppColors.border.withOpacity(0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Difficulty Level',
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.inter(
               fontSize: 16,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 16),
           CupertinoSegmentedControl<int>(
             children: {
               0: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text('Easy', style: GoogleFonts.manrope(fontSize: 14)),
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  'Easy',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
               1: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text('Medium', style: GoogleFonts.manrope(fontSize: 14)),
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  'Medium',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
               2: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text('Hard', style: GoogleFonts.manrope(fontSize: 14)),
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  'Hard',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             },
             onValueChanged: (value) =>
@@ -353,11 +549,13 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
 
   Widget _buildTimerSection() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: AppColors.border.withOpacity(0.5),
+        ),
       ),
       child: Column(
         children: [
@@ -366,9 +564,9 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
             children: [
               Text(
                 'Enable Timer',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.inter(
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -379,15 +577,16 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
             ],
           ),
           if (_timerEnabled) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Duration (minutes)',
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.inter(
                     fontSize: 14,
                     color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Row(
@@ -398,25 +597,32 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
                           ? () => setState(() => _timerMinutes -= 5)
                           : null,
                       child: Container(
-                        width: 28,
-                        height: 28,
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
                           color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.2),
+                          ),
                         ),
-                        child: Icon(CupertinoIcons.minus,
-                            size: 14, color: AppColors.primary),
+                        child: Icon(
+                          CupertinoIcons.minus,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                     Container(
-                      width: 40,
+                      width: 50,
                       alignment: Alignment.center,
                       child: Text(
                         '$_timerMinutes',
                         style: GoogleFonts.raleway(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ),
@@ -426,14 +632,20 @@ class _PracticeUploadScreenState extends State<PracticeUploadScreen> {
                           ? () => setState(() => _timerMinutes += 5)
                           : null,
                       child: Container(
-                        width: 28,
-                        height: 28,
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
                           color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.2),
+                          ),
                         ),
-                        child: Icon(CupertinoIcons.plus,
-                            size: 14, color: AppColors.primary),
+                        child: Icon(
+                          CupertinoIcons.plus,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ],

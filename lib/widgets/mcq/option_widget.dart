@@ -10,6 +10,7 @@ class OptionWidget extends StatefulWidget {
   final bool isSelected;
   final bool isCorrect;
   final bool isIncorrect;
+  final bool showInstantFeedback;
   final VoidCallback onTap;
 
   const OptionWidget({
@@ -19,6 +20,7 @@ class OptionWidget extends StatefulWidget {
     this.isSelected = false,
     this.isCorrect = false,
     this.isIncorrect = false,
+    this.showInstantFeedback = false,
     required this.onTap,
   }) : super(key: key);
 
@@ -29,15 +31,19 @@ class OptionWidget extends StatefulWidget {
 class _OptionWidgetState extends State<OptionWidget> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _glowAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: Duration(milliseconds: 250),
+      duration: Duration(milliseconds: 300),
       vsync: this,
     );
     _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
     
@@ -49,10 +55,10 @@ class _OptionWidgetState extends State<OptionWidget> with SingleTickerProviderSt
   @override
   void didUpdateWidget(OptionWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isSelected || widget.isCorrect || widget.isIncorrect) {
+    if (widget.showInstantFeedback && (widget.isSelected || widget.isCorrect || widget.isIncorrect)) {
       _controller.forward();
-    } else {
-      _controller.reverse();
+    } else if (!widget.showInstantFeedback) {
+      _controller.reset();
     }
   }
 
@@ -70,18 +76,21 @@ class _OptionWidgetState extends State<OptionWidget> with SingleTickerProviderSt
     Color glowColor = AppColors.glowBorder;
     IconData? icon;
 
-    if (widget.isCorrect) {
-      backgroundColor = AppColors.success.withOpacity(0.08);
-      borderColor = AppColors.success;
-      textColor = AppColors.success;
-      glowColor = AppColors.success;
-      icon = CupertinoIcons.checkmark_circle_fill;
-    } else if (widget.isIncorrect) {
-      backgroundColor = AppColors.error.withOpacity(0.08);
-      borderColor = AppColors.error;
-      textColor = AppColors.error;
-      glowColor = AppColors.error;
-      icon = CupertinoIcons.xmark_circle_fill;
+    // Instant feedback colors
+    if (widget.showInstantFeedback) {
+      if (widget.isCorrect) {
+        backgroundColor = AppColors.success.withOpacity(0.12);
+        borderColor = AppColors.success;
+        textColor = AppColors.success;
+        glowColor = AppColors.success;
+        icon = CupertinoIcons.checkmark_circle_fill;
+      } else if (widget.isIncorrect) {
+        backgroundColor = AppColors.error.withOpacity(0.12);
+        borderColor = AppColors.error;
+        textColor = AppColors.error;
+        glowColor = AppColors.error;
+        icon = CupertinoIcons.xmark_circle_fill;
+      }
     } else if (widget.isSelected) {
       backgroundColor = AppColors.primary.withOpacity(0.08);
       borderColor = AppColors.primary;
@@ -95,75 +104,78 @@ class _OptionWidgetState extends State<OptionWidget> with SingleTickerProviderSt
         padding: EdgeInsets.zero,
         onPressed: widget.onTap,
         child: AnimatedBuilder(
-          animation: _glowAnimation,
+          animation: _controller,
           builder: (context, child) {
-            return Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(context.screenWidth * 0.04),
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: borderColor.withOpacity(
-                    widget.isSelected || widget.isCorrect || widget.isIncorrect ? 0.8 : 0.3
+            return Transform.scale(
+              scale: widget.showInstantFeedback ? _scaleAnimation.value : 1.0,
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(context.screenWidth * 0.04),
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: borderColor.withOpacity(
+                      widget.isSelected || widget.isCorrect || widget.isIncorrect ? 0.8 : 0.3
+                    ),
+                    width: widget.isSelected || widget.isCorrect || widget.isIncorrect ? 1.5 : 1,
                   ),
-                  width: widget.isSelected || widget.isCorrect || widget.isIncorrect ? 1.5 : 1,
+                  boxShadow: (widget.isSelected || widget.isCorrect || widget.isIncorrect) && widget.showInstantFeedback ? [
+                    BoxShadow(
+                      color: glowColor.withOpacity(0.3 * _glowAnimation.value),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
+                  ] : [],
                 ),
-                boxShadow: widget.isSelected || widget.isCorrect || widget.isIncorrect ? [
-                  BoxShadow(
-                    color: glowColor.withOpacity(0.2 * _glowAnimation.value),
-                    blurRadius: 16,
-                    spreadRadius: 1,
-                  ),
-                ] : [],
-              ),
-              child: Row(
-                children: [
-                  AnimatedContainer(
-                    duration: Duration(milliseconds: 250),
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: widget.isSelected || widget.isCorrect || widget.isIncorrect 
-                          ? borderColor 
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: borderColor.withOpacity(0.6),
-                        width: 2,
+                child: Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: 250),
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: widget.isSelected || widget.isCorrect || widget.isIncorrect 
+                            ? borderColor 
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: borderColor.withOpacity(0.6),
+                          width: 2,
+                        ),
                       ),
-                    ),
-                    child: Center(
-                      child: icon != null
-                          ? Icon(
-                              icon,
-                              color: AppColors.background,
-                              size: 18,
-                            )
-                          : Text(
-                              widget.label,
-                              style: GoogleFonts.inter(
-                                fontSize: context.screenWidth * 0.036,
-                                fontWeight: FontWeight.w700,
-                                color: widget.isSelected ? AppColors.background : borderColor,
+                      child: Center(
+                        child: icon != null
+                            ? Icon(
+                                icon,
+                                color: AppColors.background,
+                                size: 18,
+                              )
+                            : Text(
+                                widget.label,
+                                style: GoogleFonts.inter(
+                                  fontSize: context.screenWidth * 0.036,
+                                  fontWeight: FontWeight.w700,
+                                  color: widget.isSelected ? AppColors.background : borderColor,
+                                ),
                               ),
-                            ),
-                    ),
-                  ),
-                  SizedBox(width: context.screenWidth * 0.04),
-                  Expanded(
-                    child: Text(
-                      widget.text,
-                      style: GoogleFonts.inter(
-                        fontSize: context.screenWidth * 0.04,
-                        color: textColor,
-                        fontWeight: FontWeight.w500,
-                        height: 1.4,
-                        letterSpacing: 0.2,
                       ),
                     ),
-                  ),
-                ],
+                    SizedBox(width: context.screenWidth * 0.04),
+                    Expanded(
+                      child: Text(
+                        widget.text,
+                        style: GoogleFonts.inter(
+                          fontSize: context.screenWidth * 0.04,
+                          color: textColor,
+                          fontWeight: FontWeight.w500,
+                          height: 1.4,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },

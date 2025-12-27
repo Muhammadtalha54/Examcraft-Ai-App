@@ -1,3 +1,4 @@
+// this is for api responce handling
 class Mcq {
   final String question;
   final List<String> options;

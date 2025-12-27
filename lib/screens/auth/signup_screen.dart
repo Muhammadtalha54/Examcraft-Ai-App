@@ -79,95 +79,152 @@ class _SignupScreenState extends State<SignupScreen> {
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () => Navigator.pop(context),
-          child: Icon(CupertinoIcons.back, color: AppColors.primary),
+          child: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.glowBorder.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              CupertinoIcons.back,
+              color: AppColors.primary,
+              size: 20,
+            ),
+          ),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                SizedBox(height: 20),
-                Image.asset(
-                  'assets/images/examcraftAI.png',
-                  width: context.screenWidth * 0.4,
-                  height: context.screenWidth * 0.4,
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Create Account',
-                  style: GoogleFonts.lato(
-                    fontSize: context.screenWidth * 0.07,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Sign up to get started',
-                  style: GoogleFonts.lato(
-                    fontSize: context.screenWidth * 0.04,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                SizedBox(height: 40),
-                AppTextField(
-                  hintText: 'Full Name',
-                  controller: _nameController,
-                  validator: (value) => Validators.required(value, 'Name'),
-                ),
-                SizedBox(height: 16),
-                AppTextField(
-                  hintText: 'Email',
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: Validators.email,
-                ),
-                SizedBox(height: 16),
-                AppTextField(
-                  hintText: 'Password',
-                  controller: _passwordController,
-                  isPassword: true,
-                  validator: Validators.password,
-                ),
-                SizedBox(height: 32),
-                Consumer<AuthProvider>(
-                  builder: (context, authProvider, _) {
-                    return AppButton(
-                      text: 'Sign Up',
-                      onPressed: _handleSignup,
-                      isLoading: authProvider.isLoading,
-                    );
-                  },
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Already have an account? ',
-                      style: GoogleFonts.lato(
-                        color: AppColors.textSecondary,
-                        fontSize: context.screenWidth * 0.035,
-                      ),
-                    ),
-                    CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Login',
-                        style: GoogleFonts.lato(
-                          color: AppColors.primary,
-                          fontSize: context.screenWidth * 0.035,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              SizedBox(height: 20),
+              // Logo with modern styling
+              Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: Offset(0, 8),
+                      spreadRadius: -4,
                     ),
                   ],
                 ),
-              ],
-            ),
+                child: Image.asset(
+                  'assets/images/examcraftAI.png',
+                  width: context.screenWidth * 0.35,
+                  height: context.screenWidth * 0.35,
+                ),
+              ),
+              SizedBox(height: 32),
+              Text(
+                'Create Account',
+                style: GoogleFonts.raleway(
+                  fontSize: context.screenWidth * 0.07,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Join us to start your learning journey',
+                style: GoogleFonts.inter(
+                  fontSize: context.screenWidth * 0.038,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              SizedBox(height: 40),
+              
+              // Form container with modern styling
+              Container(
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.glowBorder.withOpacity(0.2),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: Offset(0, 8),
+                      spreadRadius: -4,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    AppTextField(
+                      hintText: 'Full Name',
+                      controller: _nameController,
+                      validator: (value) => Validators.required(value, 'Name'),
+                    ),
+                    SizedBox(height: 16),
+                    AppTextField(
+                      hintText: 'Email',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: Validators.email,
+                    ),
+                    SizedBox(height: 16),
+                    AppTextField(
+                      hintText: 'Password',
+                      controller: _passwordController,
+                      isPassword: true,
+                      validator: Validators.password,
+                    ),
+                    SizedBox(height: 24),
+                    Consumer<AuthProvider>(
+                      builder: (context, authProvider, _) {
+                        return AppButton(
+                          text: 'Sign Up',
+                          onPressed: _handleSignup,
+                          isLoading: authProvider.isLoading,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              
+              SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Already have an account? ',
+                    style: GoogleFonts.inter(
+                      color: AppColors.textSecondary,
+                      fontSize: context.screenWidth * 0.035,
+                    ),
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Login',
+                      style: GoogleFonts.inter(
+                        color: AppColors.primary,
+                        fontSize: context.screenWidth * 0.035,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

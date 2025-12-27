@@ -34,14 +34,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () => Navigator.pop(context),
-          child: Icon(CupertinoIcons.back, color: AppColors.primary),
+          child: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.glowBorder.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              CupertinoIcons.back,
+              color: AppColors.primary,
+              size: 20,
+            ),
+          ),
         ),
         middle: Text(
           'Test History',
-          style: GoogleFonts.lato(
+          style: GoogleFonts.raleway(
             fontSize: context.screenWidth * 0.045,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
+            letterSpacing: 0.3,
           ),
         ),
         trailing: Consumer<TestProvider>(
@@ -55,16 +71,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 showCupertinoDialog(
                   context: context,
                   builder: (context) => CupertinoAlertDialog(
-                    title: Text('Clear History?', style: GoogleFonts.lato()),
-                    content: Text('This will delete all test results.', style: GoogleFonts.lato()),
+                    title: Text('Clear History?', style: GoogleFonts.raleway()),
+                    content: Text('This will delete all test results.', style: GoogleFonts.inter()),
                     actions: [
                       CupertinoDialogAction(
-                        child: Text('Cancel', style: GoogleFonts.lato()),
+                        child: Text('Cancel', style: GoogleFonts.inter()),
                         onPressed: () => Navigator.pop(context),
                       ),
                       CupertinoDialogAction(
                         isDestructiveAction: true,
-                        child: Text('Clear', style: GoogleFonts.lato()),
+                        child: Text('Clear', style: GoogleFonts.inter()),
                         onPressed: () async {
                           await testProvider.clearHistory();
                           Navigator.pop(context);
@@ -74,7 +90,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 );
               },
-              child: Icon(CupertinoIcons.trash, color: AppColors.error),
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  CupertinoIcons.trash,
+                  color: AppColors.error,
+                  size: 20,
+                ),
+              ),
             );
           },
         ),
@@ -94,26 +121,44 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    CupertinoIcons.clock,
-                    size: 64,
-                    color: AppColors.textSecondary.withOpacity(0.5),
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: Offset(0, 8),
+                          spreadRadius: -4,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      CupertinoIcons.clock_fill,
+                      size: 48,
+                      color: AppColors.textSecondary.withOpacity(0.5),
+                    ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: 24),
                   Text(
                     'No Test History',
-                    style: GoogleFonts.lato(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                    style: GoogleFonts.raleway(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                      letterSpacing: 0.3,
                     ),
                   ),
                   SizedBox(height: 8),
                   Text(
                     'Complete a test to see your results here',
-                    style: GoogleFonts.lato(
-                      fontSize: 14,
-                      color: AppColors.textSecondary.withOpacity(0.7),
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ],
@@ -122,7 +167,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           }
 
           return ListView.builder(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             itemCount: testHistory.length,
             itemBuilder: (context, index) {
               final result = testHistory[index];
@@ -130,35 +175,82 @@ class _HistoryScreenState extends State<HistoryScreen> {
               final dateFormat = DateFormat('MMM dd, yyyy • hh:mm a');
 
               return Container(
-                margin: EdgeInsets.only(bottom: 16),
+                margin: EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: passed ? AppColors.success.withOpacity(0.3) : AppColors.error.withOpacity(0.3),
+                    color: passed 
+                        ? AppColors.success.withOpacity(0.3) 
+                        : AppColors.error.withOpacity(0.3),
                     width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: Offset(0, 2),
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: Offset(0, 8),
+                      spreadRadius: -4,
+                    ),
+                    BoxShadow(
+                      color: (passed ? AppColors.success : AppColors.error).withOpacity(0.1),
+                      blurRadius: 16,
+                      offset: Offset(0, 4),
+                      spreadRadius: -2,
                     ),
                   ],
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header with status
+                      // Header with test title and status
                       Row(
                         children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  result.testTitle,
+                                  style: GoogleFonts.raleway(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  dateFormat.format(result.createdAt),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
-                              color: passed ? AppColors.success : AppColors.error,
-                              borderRadius: BorderRadius.circular(8),
+                              gradient: LinearGradient(
+                                colors: passed 
+                                    ? [AppColors.success, AppColors.success.withOpacity(0.8)]
+                                    : [AppColors.error, AppColors.error.withOpacity(0.8)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (passed ? AppColors.success : AppColors.error).withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -166,13 +258,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 Icon(
                                   passed ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.xmark_circle_fill,
                                   color: Colors.white,
-                                  size: 16,
+                                  size: 18,
                                 ),
-                                SizedBox(width: 6),
+                                SizedBox(width: 8),
                                 Text(
                                   passed ? 'Passed' : 'Failed',
-                                  style: GoogleFonts.lato(
-                                    fontSize: 12,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
@@ -180,17 +272,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ],
                             ),
                           ),
-                          Spacer(),
-                          Text(
-                            dateFormat.format(result.createdAt),
-                            style: GoogleFonts.lato(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
                         ],
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: 20),
 
                       // Score display
                       Row(
@@ -203,12 +287,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               AppColors.primary,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: 16),
                           Expanded(
                             child: _buildStatCard(
                               'Percentage',
                               '${result.percentage.toStringAsFixed(1)}%',
-                              CupertinoIcons.chart_bar,
+                              CupertinoIcons.chart_bar_fill,
                               passed ? AppColors.success : AppColors.error,
                             ),
                           ),
@@ -227,29 +311,42 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Widget _buildStatCard(String label, String value, IconData icon, Color color) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
-          SizedBox(height: 8),
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          SizedBox(height: 12),
           Text(
             value,
-            style: GoogleFonts.lato(
+            style: GoogleFonts.raleway(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: color,
+              letterSpacing: 0.3,
             ),
           ),
           SizedBox(height: 4),
           Text(
             label,
-            style: GoogleFonts.lato(
+            style: GoogleFonts.inter(
               fontSize: 12,
               color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],

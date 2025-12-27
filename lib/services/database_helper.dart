@@ -57,6 +57,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE test_results (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        testTitle TEXT NOT NULL,
         score INTEGER NOT NULL,
         total INTEGER NOT NULL,
         percentage REAL NOT NULL,

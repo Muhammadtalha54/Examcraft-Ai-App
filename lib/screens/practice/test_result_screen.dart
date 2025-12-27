@@ -10,6 +10,7 @@ class TestResultScreen extends StatelessWidget {
   final int correctAnswers;
   final String difficulty;
   final int? timeTaken;
+  final List<dynamic>? testResults;
 
   const TestResultScreen({
     Key? key,
@@ -18,6 +19,7 @@ class TestResultScreen extends StatelessWidget {
     required this.correctAnswers,
     required this.difficulty,
     this.timeTaken,
+    this.testResults,
   }) : super(key: key);
 
   double get percentage => (correctAnswers / totalQuestions) * 100;
@@ -169,7 +171,111 @@ class TestResultScreen extends StatelessWidget {
                 ),
               ),
 
-              const Spacer(),
+              // Test Results Details (if available)
+              if (testResults != null) ...[
+                const SizedBox(height: 24),
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Question Details',
+                          style: GoogleFonts.raleway(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: testResults!.length,
+                            itemBuilder: (context, index) {
+                              final result = testResults![index];
+                              final isCorrect = result['isCorrect'] ?? false;
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isCorrect
+                                      ? AppColors.success.withOpacity(0.1)
+                                      : AppColors.error.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isCorrect
+                                        ? AppColors.success.withOpacity(0.3)
+                                        : AppColors.error.withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          isCorrect
+                                              ? CupertinoIcons
+                                                  .checkmark_circle_fill
+                                              : CupertinoIcons
+                                                  .xmark_circle_fill,
+                                          color: isCorrect
+                                              ? AppColors.success
+                                              : AppColors.error,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Q${index + 1}: ${result['question'] ?? ''}',
+                                            style: GoogleFonts.manrope(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Your Answer: ${result['userAnswer'] ?? 'No answer'}',
+                                      style: GoogleFonts.manrope(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    if (!isCorrect) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Correct Answer: ${result['correctAnswer'] ?? ''}',
+                                        style: GoogleFonts.manrope(
+                                          fontSize: 12,
+                                          color: AppColors.success,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ] else
+                const Spacer(),
 
               // Action Buttons
               Column(

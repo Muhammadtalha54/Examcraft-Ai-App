@@ -1,17 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import '../api/api_client.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:3000';
-  
   static Future<Map<String, dynamic>> generateMCQTest({
     required File file,
     required int totalQuestions,
     required String difficulty,
   }) async {
     try {
-      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/test/mcq'));
+      var request = http.MultipartRequest('POST', Uri.parse('${ApiClient.baseUrl}/api/test/mcq'));
       request.files.add(await http.MultipartFile.fromPath('file', file.path));
       request.fields['totalQuestions'] = totalQuestions.toString();
       request.fields['difficulty'] = difficulty;
@@ -31,7 +30,7 @@ class ApiService {
   
   static Future<Map<String, dynamic>> getPrivacyPolicy() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/api/info/privacy'));
+      final response = await http.get(Uri.parse('${ApiClient.baseUrl}/api/info/privacy'));
       
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -45,7 +44,7 @@ class ApiService {
   
   static Future<Map<String, dynamic>> getTermsAndConditions() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/api/info/terms'));
+      final response = await http.get(Uri.parse('${ApiClient.baseUrl}/api/info/terms'));
       
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -64,7 +63,7 @@ class ApiService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/rate'),
+        Uri.parse('${ApiClient.baseUrl}/api/rate'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'userId': userId,
@@ -85,7 +84,7 @@ class ApiService {
   
   static Future<Map<String, dynamic>> getRatingStats() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/api/rate'));
+      final response = await http.get(Uri.parse('${ApiClient.baseUrl}/api/rate'));
       
       if (response.statusCode == 200) {
         return json.decode(response.body);

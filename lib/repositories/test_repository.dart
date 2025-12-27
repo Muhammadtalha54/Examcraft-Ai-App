@@ -4,7 +4,7 @@ import '../models/mcq_model.dart';
 import '../models/test_result_model.dart';
 import '../utils/response_handler.dart';
 import '../services/database_helper.dart';
-import '../api/api_client.dart';
+import '../api/test_api.dart';
 
 class TestRepository {
   final DatabaseHelper _db = DatabaseHelper.instance;
@@ -14,46 +14,34 @@ class TestRepository {
     required List<String> answers,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('${ApiClient.baseUrl}/api/test/mcq'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'questions': questions.map((q) => {
-            'question': q.question,
-            'correctAnswer': q.correctAnswer,
-          }).toList(),
-          'answers': answers,
-        }),
+      final response = await TestApi.evaluateMCQTest(
+        questions: questions,
+        answers: answers,
       );
 
-      final data = jsonDecode(response.body);
-
-      if (data['success'] == true) {
+      if (response.success && response.data != null) {
         // Save test result to SQLite
+        final data = response.data!['data'];
         final testResult = TestResult(
-          score: data['data']['score'],
-          total: data['data']['total'],
-          percentage: (data['data']['percentage'] as num).toDouble(),
+          testTitle: 'MCQ Test',
+          score: data['score'],
+          total: data['total'],
+          percentage: (data['percentage'] as num).toDouble(),
         );
         await _db.insertTestResult(testResult.toMap());
-
-        return ApiResponse(
-          success: true,
-          message: data['message'] ?? 'Test evaluated successfully',
-          data: data['data'],
-        );
       }
 
-      return ApiResponse(
-        success: false,
-        message: data['message'] ?? 'Failed to evaluate test',
-      );
+      return response;
     } catch (e) {
       return ApiResponse(
         success: false,
-        message: 'Network error: $e',
+        message: 'Error: $e',
       );
     }
+  }
+
+  Future<void> saveTestResultLocally(TestResult testResult) async {
+    await _db.insertTestResult(testResult.toMap());
   }
 
   Future<List<TestResult>> getTestHistory() async {
