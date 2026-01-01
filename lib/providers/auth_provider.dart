@@ -4,21 +4,29 @@ import '../models/user_model.dart';
 import '../repositories/auth_repository.dart';
 import '../utils/shared_prefs_helper.dart';
 
+/// Manages user authentication state throughout the app
+/// Handles login, signup, logout, and password reset functionality
 class AuthProvider with ChangeNotifier {
+  // Private variables to store user state
   User? _user;
   bool _isLoggedIn = false;
   bool _isLoading = false;
 
+  // Public getters to access user state
   User? get user => _user;
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
 
+  // Repository to handle authentication API calls
   final AuthRepository _authRepository = AuthRepository();
 
+  // Constructor - automatically checks if user is already logged in
   AuthProvider() {
     _checkLoginStatus();
   }
 
+  /// Checks if user is already logged in when app starts
+  /// Loads user data from shared preferences if available
   Future<void> _checkLoginStatus() async {
     _isLoading = true;
     notifyListeners();
@@ -47,6 +55,8 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Logs in user with email and password
+  /// Returns true if successful, throws error if failed
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
@@ -56,7 +66,7 @@ class AuthProvider with ChangeNotifier {
       _user = user;
       _isLoggedIn = true;
       
-      // Save to shared preferences only
+      // Save user login status and data to device storage
       await SharedPrefsHelper.setLoginStatus(true);
       await SharedPrefsHelper.saveUserName(user.name);
       await SharedPrefsHelper.saveUserEmail(user.email);
@@ -71,6 +81,8 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// Creates new user account with name, email and password
+  /// Returns true if successful, throws error if failed
   Future<bool> signup(String name, String email, String password) async {
     _isLoading = true;
     notifyListeners();
@@ -80,7 +92,7 @@ class AuthProvider with ChangeNotifier {
       _user = user;
       _isLoggedIn = true;
       
-      // Save to shared preferences only
+      // Save new user data to device storage
       await SharedPrefsHelper.setLoginStatus(true);
       await SharedPrefsHelper.saveUserName(user.name);
       await SharedPrefsHelper.saveUserEmail(user.email);
@@ -95,6 +107,8 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// Sends password reset email to user
+  /// Returns true if email sent successfully
   Future<bool> forgotPassword(String email) async {
     _isLoading = true;
     notifyListeners();
@@ -111,6 +125,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// Logs out user and clears all stored data
   Future<void> logout() async {
     _user = null;
     _isLoggedIn = false;

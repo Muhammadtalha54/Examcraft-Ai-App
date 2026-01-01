@@ -2,11 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../providers/test_provider.dart';
-import '../widgets/common/app_colors.dart';
-import '../widgets/common/media_query_helper.dart';
+import '../../providers/test_provider.dart';
+import '../../widgets/common/app_colors.dart';
+import '../../widgets/common/media_query_helper.dart';
 import 'package:intl/intl.dart';
 
+/// Screen that displays user's test history and results
+/// Shows all completed tests with scores, percentages, and pass/fail status
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
 
@@ -18,7 +20,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
-    // Load test history when screen opens
+    /// Loads test history from local storage when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TestProvider>(context, listen: false).loadTestHistory();
     });
@@ -62,9 +64,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
         trailing: Consumer<TestProvider>(
           builder: (context, testProvider, _) {
-            if (testProvider.testHistory == null || testProvider.testHistory!.isEmpty) {
+            if (testProvider.testHistory == null ||
+                testProvider.testHistory!.isEmpty) {
               return SizedBox.shrink();
             }
+            /// Shows clear history button when there are test results
+            /// Opens confirmation dialog before clearing all history
             return CupertinoButton(
               padding: EdgeInsets.zero,
               onPressed: () {
@@ -72,7 +77,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   context: context,
                   builder: (context) => CupertinoAlertDialog(
                     title: Text('Clear History?', style: GoogleFonts.raleway()),
-                    content: Text('This will delete all test results.', style: GoogleFonts.inter()),
+                    content: Text('This will delete all test results.',
+                        style: GoogleFonts.inter()),
                     actions: [
                       CupertinoDialogAction(
                         child: Text('Cancel', style: GoogleFonts.inter()),
@@ -110,12 +116,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
         builder: (context, testProvider, _) {
           final testHistory = testProvider.testHistory;
 
+          /// Shows loading indicator while fetching test history
           if (testHistory == null) {
             return Center(
               child: CupertinoActivityIndicator(),
             );
           }
 
+          /// Shows empty state when no tests have been completed
           if (testHistory.isEmpty) {
             return Center(
               child: Column(
@@ -166,6 +174,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             );
           }
 
+          /// Displays list of completed tests with results
+          /// Each item shows test title, date, score, and pass/fail status
           return ListView.builder(
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             itemCount: testHistory.length,
@@ -180,8 +190,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: passed 
-                        ? AppColors.success.withOpacity(0.3) 
+                    color: passed
+                        ? AppColors.success.withOpacity(0.3)
                         : AppColors.error.withOpacity(0.3),
                     width: 2,
                   ),
@@ -193,7 +203,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       spreadRadius: -4,
                     ),
                     BoxShadow(
-                      color: (passed ? AppColors.success : AppColors.error).withOpacity(0.1),
+                      color: (passed ? AppColors.success : AppColors.error)
+                          .withOpacity(0.1),
                       blurRadius: 16,
                       offset: Offset(0, 4),
                       spreadRadius: -2,
@@ -234,19 +245,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: passed 
-                                    ? [AppColors.success, AppColors.success.withOpacity(0.8)]
-                                    : [AppColors.error, AppColors.error.withOpacity(0.8)],
+                                colors: passed
+                                    ? [
+                                        AppColors.success,
+                                        AppColors.success.withOpacity(0.8)
+                                      ]
+                                    : [
+                                        AppColors.error,
+                                        AppColors.error.withOpacity(0.8)
+                                      ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: (passed ? AppColors.success : AppColors.error).withOpacity(0.3),
+                                  color: (passed
+                                          ? AppColors.success
+                                          : AppColors.error)
+                                      .withOpacity(0.3),
                                   blurRadius: 8,
                                   offset: Offset(0, 2),
                                 ),
@@ -256,7 +277,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  passed ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.xmark_circle_fill,
+                                  passed
+                                      ? CupertinoIcons.checkmark_circle_fill
+                                      : CupertinoIcons.xmark_circle_fill,
                                   color: Colors.white,
                                   size: 18,
                                 ),
@@ -309,7 +332,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  /// Creates a stat card widget showing test statistics
+  /// Used to display score and percentage in a styled container
+  Widget _buildStatCard(
+      String label, String value, IconData icon, Color color) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(

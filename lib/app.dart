@@ -1,3 +1,4 @@
+import 'package:examcraft_ai/providers/rating_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,8 +6,7 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/generate_provider.dart';
 import 'providers/test_provider.dart';
-import 'providers/info_provider.dart';
-import 'providers/rating_provider.dart';
+
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'widgets/common/app_colors.dart';
@@ -22,7 +22,7 @@ class ExamCraftApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => GenerateProvider()),
         ChangeNotifierProvider(create: (_) => TestProvider()),
-        ChangeNotifierProvider(create: (_) => InfoProvider()),
+        //ChangeNotifierProvider(create: (_) => InfoProvider()),
         ChangeNotifierProvider(create: (_) => RatingProvider()),
       ],
       child: MaterialApp(

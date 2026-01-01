@@ -3,13 +3,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../providers/generate_provider.dart';
-import '../../models/question_model.dart';
-import '../../widgets/common/app_colors.dart';
-import '../../widgets/common/snackbar.dart';
-import '../../widgets/common/media_query_helper.dart';
-import '../../utils/pdf_generator.dart';
+import '../../../providers/generate_provider.dart';
+import '../../../models/question_model.dart';
+import '../../../widgets/common/app_colors.dart';
+import '../../../widgets/common/snackbar.dart';
+import '../../../widgets/common/media_query_helper.dart';
+import '../../../utils/pdf_generator.dart';
 
+/// Screen that displays generated long/short answer questions
+/// Shows questions with answers and allows PDF download
 class LongQuestionsDisplayScreen extends StatefulWidget {
   final List<Question> questions;
   final String title;
@@ -21,12 +23,16 @@ class LongQuestionsDisplayScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<LongQuestionsDisplayScreen> createState() => _LongQuestionsDisplayScreenState();
+  State<LongQuestionsDisplayScreen> createState() =>
+      _LongQuestionsDisplayScreenState();
 }
 
-class _LongQuestionsDisplayScreenState extends State<LongQuestionsDisplayScreen> {
+class _LongQuestionsDisplayScreenState
+    extends State<LongQuestionsDisplayScreen> {
   bool _isGeneratingPdf = false;
 
+  /// Creates PDF file from questions and saves it to device
+  /// User can choose to include answers or just questions
   Future<void> _downloadPdf({required bool includeAnswers}) async {
     setState(() => _isGeneratingPdf = true);
 
@@ -42,9 +48,6 @@ class _LongQuestionsDisplayScreenState extends State<LongQuestionsDisplayScreen>
           context,
           'PDF saved to: ${pdfFile.path}',
         );
-        
-        // Optionally share the PDF
-        await PdfGenerator.sharePdf(pdfFile);
       }
     } catch (e) {
       if (mounted) {
@@ -187,7 +190,7 @@ class _LongQuestionsDisplayScreenState extends State<LongQuestionsDisplayScreen>
                         ),
                       ),
                       SizedBox(height: 16),
-                      
+
                       // Answer
                       Container(
                         padding: EdgeInsets.all(12),

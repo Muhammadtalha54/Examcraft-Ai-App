@@ -10,14 +10,15 @@ class ApiService {
     required String difficulty,
   }) async {
     try {
-      var request = http.MultipartRequest('POST', Uri.parse('${ApiClient.baseUrl}/api/test/mcq'));
+      var request = http.MultipartRequest(
+          'POST', Uri.parse('${ApiClient.baseUrl}/api/test/mcq'));
       request.files.add(await http.MultipartFile.fromPath('file', file.path));
       request.fields['totalQuestions'] = totalQuestions.toString();
       request.fields['difficulty'] = difficulty;
-      
+
       var response = await request.send();
       var responseData = await response.stream.bytesToString();
-      
+
       if (response.statusCode == 200) {
         return json.decode(responseData);
       } else {
@@ -27,11 +28,12 @@ class ApiService {
       throw Exception('Network error: ${e.toString()}');
     }
   }
-  
+
   static Future<Map<String, dynamic>> getPrivacyPolicy() async {
     try {
-      final response = await http.get(Uri.parse('${ApiClient.baseUrl}/api/info/privacy'));
-      
+      final response =
+          await http.get(Uri.parse('${ApiClient.baseUrl}/api/info/privacy'));
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -41,11 +43,12 @@ class ApiService {
       throw Exception('Network error: ${e.toString()}');
     }
   }
-  
+
   static Future<Map<String, dynamic>> getTermsAndConditions() async {
     try {
-      final response = await http.get(Uri.parse('${ApiClient.baseUrl}/api/info/terms'));
-      
+      final response =
+          await http.get(Uri.parse('${ApiClient.baseUrl}/api/info/terms'));
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -55,7 +58,7 @@ class ApiService {
       throw Exception('Network error: ${e.toString()}');
     }
   }
-  
+
   static Future<Map<String, dynamic>> submitRating({
     String? userId,
     required int rating,
@@ -71,7 +74,7 @@ class ApiService {
           'comment': comment,
         }),
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -81,11 +84,12 @@ class ApiService {
       throw Exception('Network error: ${e.toString()}');
     }
   }
-  
+
   static Future<Map<String, dynamic>> getRatingStats() async {
     try {
-      final response = await http.get(Uri.parse('${ApiClient.baseUrl}/api/rate'));
-      
+      final response =
+          await http.get(Uri.parse('${ApiClient.baseUrl}/api/rate'));
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {

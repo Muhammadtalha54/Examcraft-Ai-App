@@ -2,12 +2,16 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../widgets/common/app_button.dart';
-import '../../widgets/common/app_colors.dart';
-import '../../widgets/common/app_textfield.dart';
-import '../../models/mcq_model.dart';
+import '../../../widgets/common/app_button.dart';
+import '../../../widgets/common/app_colors.dart';
+import '../../../widgets/common/app_textfield.dart';
+import '../../../models/mcq_model.dart';
 import 'mcq_practice_test_screen.dart';
 
+/// Screen that shows test details before starting the MCQ test
+/// Users can edit test title and see test settings like timer, difficulty
+/// This screen is the test information screen before starting the test, it has options like
+/// test title, timer settings
 class TestIntroScreen extends StatefulWidget {
   final File file;
   final int mcqCount;
@@ -47,6 +51,8 @@ class _TestIntroScreenState extends State<TestIntroScreen> {
     super.dispose();
   }
 
+  /// Starts the MCQ test and goes to the test screen
+  /// Shows loading for 2 seconds then navigates to test
   void _startTest() {
     setState(() => _isLoading = true);
 
@@ -209,6 +215,7 @@ class _TestIntroScreenState extends State<TestIntroScreen> {
     );
   }
 
+  /// Creates a row showing test configuration details with icon
   Widget _buildConfigRow(String label, String value, IconData icon) {
     return Row(
       children: [

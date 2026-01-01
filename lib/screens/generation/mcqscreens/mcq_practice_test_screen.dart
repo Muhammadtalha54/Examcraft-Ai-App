@@ -3,11 +3,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../widgets/common/app_colors.dart';
-import '../../models/mcq_model.dart';
-import '../../api/test_api.dart';
+import '../../../widgets/common/app_colors.dart';
+import '../../../models/mcq_model.dart';
+import '../../../api/test_api.dart';
 import 'test_result_screen.dart';
 
+/// Screen where users take the MCQ test
+/// Shows questions one by one with timer and instant feedback
 class MCQPracticeTestScreen extends StatefulWidget {
   final String testTitle;
   final int mcqCount;
@@ -69,6 +71,7 @@ class _MCQPracticeTestScreenState extends State<MCQPracticeTestScreen>
     super.dispose();
   }
 
+  /// Starts countdown timer if timer is enabled for the test
   void _startTimer() {
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
@@ -80,13 +83,15 @@ class _MCQPracticeTestScreenState extends State<MCQPracticeTestScreen>
     });
   }
 
+  /// Handles when user selects an answer option
+  /// Shows instant feedback and auto advances to next question
   void _selectOption(int index) {
     if (_isAnswered) return;
 
     HapticFeedback.lightImpact();
-    
+
     final selectedAnswer = widget.mcqs[_currentIndex].options[index];
-    
+
     setState(() {
       _selectedAnswers[_currentIndex] = selectedAnswer;
       _isAnswered = true;
@@ -105,6 +110,7 @@ class _MCQPracticeTestScreenState extends State<MCQPracticeTestScreen>
     });
   }
 
+  /// Moves to next question or ends test if last question
   void _nextQuestion() {
     if (_currentIndex < widget.mcqs.length - 1) {
       setState(() {
@@ -118,22 +124,24 @@ class _MCQPracticeTestScreenState extends State<MCQPracticeTestScreen>
     }
   }
 
+  /// Ends the test and sends answers to API for evaluation
+  /// Shows results screen with score and detailed feedback
   Future<void> _endTest() async {
     _countdownTimer?.cancel();
-    
+
     // Prepare answers for API
     final answers = _selectedAnswers.map((answer) => answer ?? '').toList();
-    
+
     try {
       // Call the API to evaluate the test
       final response = await TestApi.evaluateMCQTest(
         questions: widget.mcqs,
         answers: answers,
       );
-      
+
       if (response.success && response.data != null) {
         final testResult = response.data!;
-        
+
         Navigator.pushReplacement(
           context,
           CupertinoPageRoute(
@@ -158,7 +166,8 @@ class _MCQPracticeTestScreenState extends State<MCQPracticeTestScreen>
       _showLocalResults();
     }
   }
-  
+
+  /// Shows results using local score calculation if API fails
   void _showLocalResults() {
     Navigator.pushReplacement(
       context,
@@ -176,6 +185,7 @@ class _MCQPracticeTestScreenState extends State<MCQPracticeTestScreen>
     );
   }
 
+  /// Returns color for answer options based on correctness
   Color _getOptionColor(int optionIndex) {
     if (!_showInstantFeedback) return AppColors.surface;
 
@@ -183,13 +193,15 @@ class _MCQPracticeTestScreenState extends State<MCQPracticeTestScreen>
       return AppColors.success;
     }
 
-    if (_selectedAnswers[_currentIndex] == widget.mcqs[_currentIndex].options[optionIndex]) {
+    if (_selectedAnswers[_currentIndex] ==
+        widget.mcqs[_currentIndex].options[optionIndex]) {
       return AppColors.error;
     }
 
     return AppColors.surface.withOpacity(0.5);
   }
 
+  /// Formats seconds into MM:SS format for timer display
   String _formatTime(int seconds) {
     int minutes = seconds ~/ 60;
     int remainingSeconds = seconds % 60;
@@ -308,11 +320,21 @@ class _MCQPracticeTestScreenState extends State<MCQPracticeTestScreen>
                         child: ListView.builder(
                           itemCount: widget.mcqs[_currentIndex].options.length,
                           itemBuilder: (context, index) {
-                            String optionLetter = String.fromCharCode(65 + index);
-                            String option = widget.mcqs[_currentIndex].options[index];
-                            bool isSelected = _selectedAnswers[_currentIndex] == option;
-                            bool isCorrect = _showInstantFeedback && index == widget.mcqs[_currentIndex].correctAnswerIndex;
-                            bool isIncorrect = _showInstantFeedback && isSelected && index != widget.mcqs[_currentIndex].correctAnswerIndex;
+                            String optionLetter =
+                                String.fromCharCode(65 + index);
+                            String option =
+                                widget.mcqs[_currentIndex].options[index];
+                            bool isSelected =
+                                _selectedAnswers[_currentIndex] == option;
+                            bool isCorrect = _showInstantFeedback &&
+                                index ==
+                                    widget
+                                        .mcqs[_currentIndex].correctAnswerIndex;
+                            bool isIncorrect = _showInstantFeedback &&
+                                isSelected &&
+                                index !=
+                                    widget
+                                        .mcqs[_currentIndex].correctAnswerIndex;
 
                             return AnimatedBuilder(
                               animation: _optionAnimation,
@@ -321,26 +343,41 @@ class _MCQPracticeTestScreenState extends State<MCQPracticeTestScreen>
                                   margin: const EdgeInsets.only(bottom: 16),
                                   child: CupertinoButton(
                                     padding: EdgeInsets.zero,
-                                    onPressed: _isAnswered ? null : () => _selectOption(index),
+                                    onPressed: _isAnswered
+                                        ? null
+                                        : () => _selectOption(index),
                                     child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 300),
+                                      duration:
+                                          const Duration(milliseconds: 300),
                                       padding: const EdgeInsets.all(20),
                                       decoration: BoxDecoration(
                                         color: _getOptionColor(index),
                                         borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
-                                          color: isSelected || isCorrect || isIncorrect
-                                              ? (isCorrect ? AppColors.success : (isIncorrect ? AppColors.error : AppColors.primary))
+                                          color: isSelected ||
+                                                  isCorrect ||
+                                                  isIncorrect
+                                              ? (isCorrect
+                                                  ? AppColors.success
+                                                  : (isIncorrect
+                                                      ? AppColors.error
+                                                      : AppColors.primary))
                                               : AppColors.border,
                                           width: 2,
                                         ),
-                                        boxShadow: _showInstantFeedback && (isCorrect || isIncorrect) ? [
-                                          BoxShadow(
-                                            color: (isCorrect ? AppColors.success : AppColors.error).withOpacity(0.3),
-                                            blurRadius: 20,
-                                            spreadRadius: 2,
-                                          ),
-                                        ] : [],
+                                        boxShadow: _showInstantFeedback &&
+                                                (isCorrect || isIncorrect)
+                                            ? [
+                                                BoxShadow(
+                                                  color: (isCorrect
+                                                          ? AppColors.success
+                                                          : AppColors.error)
+                                                      .withOpacity(0.3),
+                                                  blurRadius: 20,
+                                                  spreadRadius: 2,
+                                                ),
+                                              ]
+                                            : [],
                                       ),
                                       child: Row(
                                         children: [
@@ -348,23 +385,40 @@ class _MCQPracticeTestScreenState extends State<MCQPracticeTestScreen>
                                             width: 32,
                                             height: 32,
                                             decoration: BoxDecoration(
-                                              color: isSelected || isCorrect || isIncorrect
-                                                  ? (isCorrect ? AppColors.success : (isIncorrect ? AppColors.error : AppColors.primary))
-                                                  : AppColors.primary.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(16),
+                                              color: isSelected ||
+                                                      isCorrect ||
+                                                      isIncorrect
+                                                  ? (isCorrect
+                                                      ? AppColors.success
+                                                      : (isIncorrect
+                                                          ? AppColors.error
+                                                          : AppColors.primary))
+                                                  : AppColors.primary
+                                                      .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                             ),
                                             child: Center(
-                                              child: _showInstantFeedback && (isCorrect || isIncorrect)
+                                              child: _showInstantFeedback &&
+                                                      (isCorrect || isIncorrect)
                                                   ? Icon(
-                                                      isCorrect ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.xmark_circle_fill,
+                                                      isCorrect
+                                                          ? CupertinoIcons
+                                                              .checkmark_circle_fill
+                                                          : CupertinoIcons
+                                                              .xmark_circle_fill,
                                                       color: Colors.white,
                                                       size: 18,
                                                     )
                                                   : Text(
                                                       optionLetter,
-                                                      style: GoogleFonts.raleway(
-                                                        fontWeight: FontWeight.w600,
-                                                        color: isSelected ? Colors.white : AppColors.primary,
+                                                      style:
+                                                          GoogleFonts.raleway(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: isSelected
+                                                            ? Colors.white
+                                                            : AppColors.primary,
                                                       ),
                                                     ),
                                             ),
@@ -401,6 +455,7 @@ class _MCQPracticeTestScreenState extends State<MCQPracticeTestScreen>
     );
   }
 
+  /// Shows dialog asking user if they want to exit the test
   void _showExitDialog() {
     showCupertinoDialog(
       context: context,

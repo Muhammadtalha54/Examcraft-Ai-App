@@ -1,5 +1,5 @@
 import 'package:examcraft_ai/screens/auth/login_screen.dart';
-import 'package:examcraft_ai/screens/info_screens.dart';
+import 'package:examcraft_ai/screens/infoscreen/info_screens.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

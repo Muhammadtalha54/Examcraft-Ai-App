@@ -2,9 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
-import '../widgets/common/app_colors.dart';
-import '../services/api_service.dart';
+import '../../widgets/common/app_colors.dart';
+import '../../services/api_service.dart';
 
+/// these screens are used for displaying privacy policy and terms and conditions
 class PrivacyPolicyScreen extends StatefulWidget {
   const PrivacyPolicyScreen({Key? key}) : super(key: key);
 
@@ -117,7 +118,8 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
       }
     } catch (e) {
       setState(() {
-        _content = 'Failed to load terms and conditions. Please try again later.';
+        _content =
+            'Failed to load terms and conditions. Please try again later.';
         _isLoading = false;
       });
     }

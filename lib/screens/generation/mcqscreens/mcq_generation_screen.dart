@@ -5,16 +5,18 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import '../../providers/generate_provider.dart';
-import '../../widgets/common/app_button.dart';
-import '../../widgets/common/app_colors.dart';
-import '../../widgets/common/app_textfield.dart';
-import '../../widgets/common/media_query_helper.dart';
-import '../../widgets/common/snackbar.dart';
-import '../../widgets/common/ios_transition.dart';
-import '../../utils/validators.dart';
-import '../questions/mcq_display_screen.dart';
+import '../../../providers/generate_provider.dart';
+import '../../../widgets/common/app_button.dart';
+import '../../../widgets/common/app_colors.dart';
+import '../../../widgets/common/app_textfield.dart';
+import '../../../widgets/common/media_query_helper.dart';
+import '../../../widgets/common/snackbar.dart';
+import '../../../widgets/common/ios_transition.dart';
+import '../../../utils/validators.dart';
+import 'mcq_display_screen.dart';
 
+/// Screen where users upload PDF files and generate MCQ questions
+/// Lets users pick PDF, set question count and difficulty level
 class MCQGenerationScreen extends StatefulWidget {
   const MCQGenerationScreen({Key? key}) : super(key: key);
 
@@ -35,6 +37,7 @@ class _MCQGenerationScreenState extends State<MCQGenerationScreen> {
     super.dispose();
   }
 
+  /// Opens file picker to let user select a PDF file
   Future<void> _pickFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -69,6 +72,9 @@ class _MCQGenerationScreenState extends State<MCQGenerationScreen> {
   //   }
   // }
 
+  /// Sends PDF file to AI to generate MCQ questions
+  /// Checks if file is selected and question count is valid
+  /// Shows generated questions on next screen if successful
   Future<void> _generateMCQs() async {
     if (_selectedFile == null) {
       AppSnackbar.show(context, 'Please select a PDF file', isError: true);
@@ -378,6 +384,7 @@ class _MCQGenerationScreenState extends State<MCQGenerationScreen> {
     );
   }
 
+  /// Creates a styled upload button with icon and text
   Widget _buildUploadButton(
     String text,
     IconData icon,

@@ -10,12 +10,12 @@ import '../../widgets/common/media_query_helper.dart';
 import '../../widgets/common/ios_transition.dart';
 import '../../widgets/common/modern_feature_card.dart';
 import '../../widgets/common/app_drawer.dart';
-import '../generation/mcq_generation_screen.dart';
-import '../practice/practice_upload_screen.dart';
-import '../generation/short_questions_screen.dart';
-import '../generation/long_questions_screen.dart';
-import '../history_screen.dart';
-import '../rate_app_screen.dart';
+import '../generation/mcqscreens/mcq_generation_screen.dart';
+
+import '../generation/shortquestion/short_questions_screen.dart';
+import '../generation/long_question/long_questions_screen.dart';
+import '../historyscreen/history_screen.dart';
+import '../rateappscreen/rate_app_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -121,7 +121,7 @@ class HomeScreen extends StatelessWidget {
                     mainAxisSpacing: 16,
                     childAspectRatio: 0.85,
                   ),
-                  itemCount: 6,
+                  itemCount: 5,
                   itemBuilder: (context, index) {
                     final features = [
                       {
@@ -254,9 +254,9 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding: EdgeInsets.all(18),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Icon Container with Gradient Background
@@ -284,7 +284,7 @@ class HomeScreen extends StatelessWidget {
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 12),
               // Title
               Text(
                 title,
@@ -298,7 +298,7 @@ class HomeScreen extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 6),
               // Subtitle
               Text(
                 subtitle,

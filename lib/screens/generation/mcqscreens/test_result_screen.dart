@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../widgets/common/app_button.dart';
-import '../../widgets/common/app_colors.dart';
+import '../../../widgets/common/app_button.dart';
+import '../../../widgets/common/app_colors.dart';
 
+/// Screen that shows test results after completing MCQ test
+/// Displays score, performance feedback, and detailed question results
 class TestResultScreen extends StatelessWidget {
   final String testTitle;
   final int totalQuestions;
@@ -22,15 +24,19 @@ class TestResultScreen extends StatelessWidget {
     this.testResults,
   }) : super(key: key);
 
+  /// Calculates percentage score from correct answers
   double get percentage => (correctAnswers / totalQuestions) * 100;
+  /// Calculates number of wrong answers
   int get wrongAnswers => totalQuestions - correctAnswers;
 
+  /// Returns color based on score percentage
   Color get scoreColor {
     if (percentage >= 80) return AppColors.success;
     if (percentage >= 60) return Colors.orange;
     return AppColors.error;
   }
 
+  /// Returns performance message based on score
   String get performanceText {
     if (percentage >= 90) return 'Excellent!';
     if (percentage >= 80) return 'Great Job!';
@@ -39,6 +45,7 @@ class TestResultScreen extends StatelessWidget {
     return 'Keep Practicing!';
   }
 
+  /// Formats time from seconds to minutes and seconds
   String _formatTime(int seconds) {
     int minutes = seconds ~/ 60;
     int remainingSeconds = seconds % 60;
@@ -318,6 +325,7 @@ class TestResultScreen extends StatelessWidget {
     );
   }
 
+  /// Creates a stat item widget showing number and label
   Widget _buildStatItem(String label, String value, Color color) {
     return Column(
       children: [
@@ -341,6 +349,7 @@ class TestResultScreen extends StatelessWidget {
     );
   }
 
+  /// Creates a detail row with icon, label and value
   Widget _buildDetailRow(String label, String value, IconData icon) {
     return Row(
       children: [
@@ -380,10 +389,12 @@ class TestResultScreen extends StatelessWidget {
     );
   }
 
+  /// Formats date to DD/MM/YYYY format
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }
 
+  /// Saves test results to local storage and shows confirmation
   void _saveTest(BuildContext context) {
     // TODO: Implement save to local database
     showCupertinoDialog(

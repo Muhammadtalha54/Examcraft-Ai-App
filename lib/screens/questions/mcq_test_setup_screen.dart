@@ -97,7 +97,7 @@ class _MCQTestSetupScreenState extends State<MCQTestSetupScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,42 +291,46 @@ class _MCQTestSetupScreenState extends State<MCQTestSetupScreen> {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      CupertinoButton(
-                                        padding: EdgeInsets.zero,
-                                        onPressed: _minutes > 0 ? () => setState(() => _minutes--) : null,
-                                        child: Container(
-                                          width: 32,
-                                          height: 32,
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(8),
+                                      Flexible(
+                                        child: CupertinoButton(
+                                          padding: EdgeInsets.zero,
+                                          onPressed: _minutes > 0 ? () => setState(() => _minutes--) : null,
+                                          child: Container(
+                                            width: 28,
+                                            height: 28,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Icon(CupertinoIcons.minus, size: 14, color: AppColors.primary),
                                           ),
-                                          child: Icon(CupertinoIcons.minus, size: 16, color: AppColors.primary),
                                         ),
                                       ),
                                       Container(
-                                        width: 50,
+                                        width: 40,
                                         alignment: Alignment.center,
                                         child: Text(
                                           '$_minutes',
                                           style: GoogleFonts.raleway(
-                                            fontSize: 18,
+                                            fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                             color: AppColors.textPrimary,
                                           ),
                                         ),
                                       ),
-                                      CupertinoButton(
-                                        padding: EdgeInsets.zero,
-                                        onPressed: _minutes < 120 ? () => setState(() => _minutes++) : null,
-                                        child: Container(
-                                          width: 32,
-                                          height: 32,
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(8),
+                                      Flexible(
+                                        child: CupertinoButton(
+                                          padding: EdgeInsets.zero,
+                                          onPressed: _minutes < 120 ? () => setState(() => _minutes++) : null,
+                                          child: Container(
+                                            width: 28,
+                                            height: 28,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Icon(CupertinoIcons.plus, size: 14, color: AppColors.primary),
                                           ),
-                                          child: Icon(CupertinoIcons.plus, size: 16, color: AppColors.primary),
                                         ),
                                       ),
                                     ],
@@ -360,42 +364,46 @@ class _MCQTestSetupScreenState extends State<MCQTestSetupScreen> {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      CupertinoButton(
-                                        padding: EdgeInsets.zero,
-                                        onPressed: _seconds > 0 ? () => setState(() => _seconds -= 5) : null,
-                                        child: Container(
-                                          width: 32,
-                                          height: 32,
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(8),
+                                      Flexible(
+                                        child: CupertinoButton(
+                                          padding: EdgeInsets.zero,
+                                          onPressed: _seconds > 0 ? () => setState(() => _seconds -= 5) : null,
+                                          child: Container(
+                                            width: 28,
+                                            height: 28,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Icon(CupertinoIcons.minus, size: 14, color: AppColors.primary),
                                           ),
-                                          child: Icon(CupertinoIcons.minus, size: 16, color: AppColors.primary),
                                         ),
                                       ),
                                       Container(
-                                        width: 50,
+                                        width: 40,
                                         alignment: Alignment.center,
                                         child: Text(
                                           '$_seconds',
                                           style: GoogleFonts.raleway(
-                                            fontSize: 18,
+                                            fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                             color: AppColors.textPrimary,
                                           ),
                                         ),
                                       ),
-                                      CupertinoButton(
-                                        padding: EdgeInsets.zero,
-                                        onPressed: _seconds < 55 ? () => setState(() => _seconds += 5) : null,
-                                        child: Container(
-                                          width: 32,
-                                          height: 32,
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(8),
+                                      Flexible(
+                                        child: CupertinoButton(
+                                          padding: EdgeInsets.zero,
+                                          onPressed: _seconds < 55 ? () => setState(() => _seconds += 5) : null,
+                                          child: Container(
+                                            width: 28,
+                                            height: 28,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Icon(CupertinoIcons.plus, size: 14, color: AppColors.primary),
                                           ),
-                                          child: Icon(CupertinoIcons.plus, size: 16, color: AppColors.primary),
                                         ),
                                       ),
                                     ],
@@ -411,7 +419,7 @@ class _MCQTestSetupScreenState extends State<MCQTestSetupScreen> {
                 ),
               ),
               
-              Spacer(),
+              SizedBox(height: 40),
               
               // Start button
               Container(

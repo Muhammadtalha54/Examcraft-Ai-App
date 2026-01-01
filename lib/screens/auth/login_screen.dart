@@ -69,12 +69,9 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Container(
-            height: context.screenHeight - context.statusBarHeight,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            children: [
                 // Logo with modern styling
                 Container(
                   padding: EdgeInsets.all(20),
@@ -216,8 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

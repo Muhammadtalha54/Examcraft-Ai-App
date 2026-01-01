@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../providers/rating_provider.dart';
-import '../widgets/common/app_colors.dart';
-import '../widgets/common/snackbar.dart';
+import '../../providers/rating_provider.dart';
+import '../../widgets/common/app_colors.dart';
+import '../../widgets/common/snackbar.dart';
 
 class RateAppScreen extends StatefulWidget {
   const RateAppScreen({Key? key}) : super(key: key);
@@ -30,12 +30,14 @@ class _RateAppScreenState extends State<RateAppScreen> {
     }
 
     try {
-      final ratingProvider = Provider.of<RatingProvider>(context, listen: false);
+      final ratingProvider =
+          Provider.of<RatingProvider>(context, listen: false);
       final message = await ratingProvider.submitRating(
         rating: _rating,
-        feedback: _commentController.text.isEmpty ? null : _commentController.text,
+        feedback:
+            _commentController.text.isEmpty ? null : _commentController.text,
       );
-      
+
       if (mounted) {
         AppSnackbar.show(context, message);
         Navigator.pop(context);
@@ -85,10 +87,16 @@ class _RateAppScreenState extends State<RateAppScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            children: [
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height - 
+                         MediaQuery.of(context).padding.top - 
+                         MediaQuery.of(context).padding.bottom - 100,
+            ),
+            child: Column(
+              children: [
               // Header Section
               Container(
                 padding: EdgeInsets.symmetric(vertical: 12),
@@ -100,7 +108,10 @@ class _RateAppScreenState extends State<RateAppScreen> {
                       height: 80,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFF10B981), Color(0xFF10B981).withOpacity(0.7)],
+                          colors: [
+                            Color(0xFF10B981),
+                            Color(0xFF10B981).withOpacity(0.7)
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -143,7 +154,7 @@ class _RateAppScreenState extends State<RateAppScreen> {
                 ),
               ),
               SizedBox(height: 40),
-              
+
               // Rating Container
               Container(
                 padding: EdgeInsets.all(32),
@@ -169,27 +180,33 @@ class _RateAppScreenState extends State<RateAppScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(5, (index) {
-                        return CupertinoButton(
-                          padding: EdgeInsets.symmetric(horizontal: 4),
-                          onPressed: () => setState(() => _rating = index + 1),
-                          child: Container(
-                            padding: EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: _rating > index 
-                                  ? Colors.amber.withOpacity(0.1)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              _rating > index ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                              color: _rating > index ? Colors.amber : AppColors.border,
-                              size: 36,
+                        return Flexible(
+                          child: CupertinoButton(
+                            padding: EdgeInsets.symmetric(horizontal: 2),
+                            onPressed: () => setState(() => _rating = index + 1),
+                            child: Container(
+                              padding: EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: _rating > index
+                                    ? Colors.amber.withOpacity(0.1)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                _rating > index
+                                    ? CupertinoIcons.star_fill
+                                    : CupertinoIcons.star,
+                                color: _rating > index
+                                    ? Colors.amber
+                                    : AppColors.border,
+                                size: 32,
+                              ),
                             ),
                           ),
                         );
                       }),
                     ),
-                    
+
                     if (_rating > 0) ...[
                       SizedBox(height: 20),
                       Text(
@@ -201,9 +218,9 @@ class _RateAppScreenState extends State<RateAppScreen> {
                         ),
                       ),
                     ],
-                    
+
                     SizedBox(height: 32),
-                    
+
                     // Comment Field
                     Container(
                       decoration: BoxDecoration(
@@ -230,9 +247,9 @@ class _RateAppScreenState extends State<RateAppScreen> {
                         padding: EdgeInsets.all(16),
                       ),
                     ),
-                    
+
                     SizedBox(height: 32),
-                    
+
                     // Submit Button
                     Consumer<RatingProvider>(
                       builder: (context, ratingProvider, _) {
@@ -242,9 +259,11 @@ class _RateAppScreenState extends State<RateAppScreen> {
                           child: CupertinoButton(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(16),
-                            onPressed: ratingProvider.isLoading ? null : _submitRating,
+                            onPressed:
+                                ratingProvider.isLoading ? null : _submitRating,
                             child: ratingProvider.isLoading
-                                ? CupertinoActivityIndicator(color: Colors.white)
+                                ? CupertinoActivityIndicator(
+                                    color: Colors.white)
                                 : Text(
                                     'Submit Rating',
                                     style: GoogleFonts.inter(
@@ -260,13 +279,14 @@ class _RateAppScreenState extends State<RateAppScreen> {
                   ],
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-  
+
   String _getRatingText(int rating) {
     switch (rating) {
       case 1:

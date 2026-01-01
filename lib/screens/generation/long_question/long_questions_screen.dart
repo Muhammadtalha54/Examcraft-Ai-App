@@ -1,30 +1,32 @@
 import 'dart:io';
+import 'package:examcraft_ai/models/question_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
-import '../../providers/generate_provider.dart';
-import '../../widgets/common/app_button.dart';
-import '../../widgets/common/app_colors.dart';
-import '../../widgets/common/app_textfield.dart';
-import '../../widgets/common/media_query_helper.dart';
-import '../../widgets/common/snackbar.dart';
-import '../../widgets/common/ios_transition.dart';
-import '../../utils/validators.dart';
-import '../../utils/pdf_helper.dart';
-import '../../models/question_model.dart';
-import '../questions/long_questions_display_screen.dart';
+import '../../../providers/generate_provider.dart';
+import '../../../widgets/common/app_button.dart';
+import '../../../widgets/common/app_colors.dart';
+import '../../../widgets/common/app_textfield.dart';
+import '../../../widgets/common/media_query_helper.dart';
+import '../../../widgets/common/snackbar.dart';
+import '../../../widgets/common/ios_transition.dart';
+import '../../../utils/validators.dart';
+import '../../../utils/pdf_helper.dart';
+import 'long_questions_display_screen.dart';
 
-class ShortQuestionsScreen extends StatefulWidget {
-  const ShortQuestionsScreen({Key? key}) : super(key: key);
+/// Screen where users upload PDF files and generate long answer questions
+/// Lets users pick PDF, set question count and difficulty level
+class LongQuestionsScreen extends StatefulWidget {
+  const LongQuestionsScreen({Key? key}) : super(key: key);
 
   @override
-  State<ShortQuestionsScreen> createState() => _ShortQuestionsScreenState();
+  State<LongQuestionsScreen> createState() => _LongQuestionsScreenState();
 }
 
-class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
-  final _countController = TextEditingController(text: '5');
+class _LongQuestionsScreenState extends State<LongQuestionsScreen> {
+  final _countController = TextEditingController(text: '3');
   File? _selectedFile;
   String _selectedDifficulty = 'medium';
 
@@ -36,6 +38,7 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
     super.dispose();
   }
 
+  /// Opens file picker to let user select a PDF file
   Future<void> _pickFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -54,6 +57,9 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
     }
   }
 
+  /// Sends PDF file to AI to generate long answer questions
+  /// Checks if file is selected and question count is valid
+  /// Shows generated questions on next screen if successful
   Future<void> _generateQuestions() async {
     if (_selectedFile == null) {
       AppSnackbar.show(context, 'Please select a PDF file', isError: true);
@@ -70,7 +76,7 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
     try {
       final generateProvider =
           Provider.of<GenerateProvider>(context, listen: false);
-      final message = await generateProvider.generateShortQuestions(
+      final message = await generateProvider.generateLongQuestions(
         pdfPath: _selectedFile!.path,
         count: count,
         difficulty: _selectedDifficulty,
@@ -86,7 +92,7 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
             IOSPageRoute(
               child: LongQuestionsDisplayScreen(
                 questions: generateProvider.questions!,
-                title: 'Short Answer Questions',
+                title: 'Long Answer Questions',
               ),
             ),
           );
@@ -99,15 +105,16 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
     }
   }
 
+  /// Saves generated questions as PDF file to device storage
   Future<void> _exportToPDF(List<Question> questions) async {
     try {
       final questionMaps =
           questions.map((question) => question.toJson()).toList();
       final filePath = await PDFHelper.generateAndSavePDF(
         title:
-            'Short Answer Questions - ${_selectedDifficulty.toUpperCase()} Level',
+            'Long Answer Questions - ${_selectedDifficulty.toUpperCase()} Level',
         questions: questionMaps,
-        type: 'short',
+        type: 'long',
       );
       AppSnackbar.show(context, 'PDF saved to: $filePath');
     } catch (e) {
@@ -144,7 +151,7 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
           ),
         ),
         middle: Text(
-          'Short Questions',
+          'Long Questions',
           style: GoogleFonts.raleway(
             fontSize: context.screenWidth * 0.045,
             fontWeight: FontWeight.bold,
@@ -176,7 +183,7 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'Upload a PDF file to generate concise short answer questions',
+                      'Upload a PDF file to generate detailed long answer questions',
                       style: GoogleFonts.inter(
                         fontSize: context.screenWidth * 0.038,
                         color: AppColors.textSecondary,
@@ -209,7 +216,7 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
                         spreadRadius: -4,
                       ),
                       BoxShadow(
-                        color: AppColors.secondary.withOpacity(0.1),
+                        color: Color(0xFF8B5CF6).withOpacity(0.1),
                         blurRadius: 16,
                         offset: Offset(0, 4),
                         spreadRadius: -2,
@@ -225,8 +232,8 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppColors.secondary,
-                              AppColors.secondary.withOpacity(0.7)
+                              Color(0xFF8B5CF6),
+                              Color(0xFF8B5CF6).withOpacity(0.7)
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -234,7 +241,7 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.secondary.withOpacity(0.3),
+                              color: Color(0xFF8B5CF6).withOpacity(0.3),
                               blurRadius: 12,
                               offset: Offset(0, 4),
                             ),
@@ -248,7 +255,7 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
                       ),
                       SizedBox(height: 12),
                       Text(
-                        'Upload PDF',
+                        '  Upload PDF  ',
                         style: GoogleFonts.inter(
                           fontSize: context.screenWidth * 0.035,
                           color: AppColors.textPrimary,
@@ -431,7 +438,7 @@ class _ShortQuestionsScreenState extends State<ShortQuestionsScreen> {
               Consumer<GenerateProvider>(
                 builder: (context, generateProvider, _) {
                   return AppButton(
-                    text: 'Generate Short Questions',
+                    text: 'Generate Long Questions',
                     onPressed: _generateQuestions,
                     isLoading: generateProvider.isLoading,
                   );

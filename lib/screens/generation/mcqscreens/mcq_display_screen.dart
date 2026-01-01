@@ -2,14 +2,16 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../models/mcq_model.dart';
-import '../../widgets/common/app_colors.dart';
-import '../../widgets/common/media_query_helper.dart';
-import '../../widgets/common/ios_transition.dart';
-import '../../utils/pdf_generator.dart';
-import '../../widgets/common/snackbar.dart';
-import 'mcq_test_setup_screen.dart';
+import '../../../models/mcq_model.dart';
+import '../../../widgets/common/app_colors.dart';
+import '../../../widgets/common/media_query_helper.dart';
+import '../../../widgets/common/ios_transition.dart';
+import '../../../utils/pdf_generator.dart';
+import '../../../widgets/common/snackbar.dart';
+import '../../questions/mcq_test_setup_screen.dart';
 
+/// Screen that shows generated MCQ questions to the user
+/// Allows users to start test or download questions as PDF
 class MCQDisplayScreen extends StatefulWidget {
   final List<MCQ> mcqs;
   final String title;
@@ -27,6 +29,8 @@ class MCQDisplayScreen extends StatefulWidget {
 class _MCQDisplayScreenState extends State<MCQDisplayScreen> {
   bool _isGeneratingPdf = false;
 
+  /// Creates PDF file from MCQ questions and saves it to device
+  /// User can choose to include answers or just questions
   Future<void> _downloadPdf({required bool includeAnswers}) async {
     setState(() => _isGeneratingPdf = true);
 
@@ -52,6 +56,7 @@ class _MCQDisplayScreenState extends State<MCQDisplayScreen> {
     }
   }
 
+  /// Takes user to test setup screen to start MCQ test
   void _startTest() {
     Navigator.push(
       context,
@@ -132,7 +137,10 @@ class _MCQDisplayScreenState extends State<MCQDisplayScreen> {
                       height: 64,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [AppColors.success, AppColors.success.withOpacity(0.7)],
+                          colors: [
+                            AppColors.success,
+                            AppColors.success.withOpacity(0.7)
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -173,9 +181,9 @@ class _MCQDisplayScreenState extends State<MCQDisplayScreen> {
                   ],
                 ),
               ),
-              
+
               SizedBox(height: 32),
-              
+
               // Action buttons
               Container(
                 padding: EdgeInsets.all(24),
@@ -209,7 +217,8 @@ class _MCQDisplayScreenState extends State<MCQDisplayScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(CupertinoIcons.play_fill, size: 20, color: Colors.white),
+                            Icon(CupertinoIcons.play_fill,
+                                size: 20, color: Colors.white),
                             SizedBox(width: 12),
                             Text(
                               'Start MCQ Test',
@@ -223,9 +232,9 @@ class _MCQDisplayScreenState extends State<MCQDisplayScreen> {
                         ),
                       ),
                     ),
-                    
+
                     SizedBox(height: 16),
-                    
+
                     // Download buttons
                     Row(
                       children: [
@@ -236,13 +245,18 @@ class _MCQDisplayScreenState extends State<MCQDisplayScreen> {
                               padding: EdgeInsets.zero,
                               color: AppColors.secondary,
                               borderRadius: BorderRadius.circular(12),
-                              onPressed: _isGeneratingPdf ? null : () => _downloadPdf(includeAnswers: true),
+                              onPressed: _isGeneratingPdf
+                                  ? null
+                                  : () => _downloadPdf(includeAnswers: true),
                               child: _isGeneratingPdf
-                                  ? CupertinoActivityIndicator(color: Colors.white)
+                                  ? CupertinoActivityIndicator(
+                                      color: Colors.white)
                                   : Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Icon(CupertinoIcons.doc_text_fill, size: 16, color: Colors.white),
+                                        Icon(CupertinoIcons.doc_text_fill,
+                                            size: 16, color: Colors.white),
                                         SizedBox(width: 8),
                                         Text(
                                           'With Answers',
@@ -265,11 +279,14 @@ class _MCQDisplayScreenState extends State<MCQDisplayScreen> {
                               padding: EdgeInsets.zero,
                               color: AppColors.border,
                               borderRadius: BorderRadius.circular(12),
-                              onPressed: _isGeneratingPdf ? null : () => _downloadPdf(includeAnswers: false),
+                              onPressed: _isGeneratingPdf
+                                  ? null
+                                  : () => _downloadPdf(includeAnswers: false),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(CupertinoIcons.doc_fill, size: 16, color: AppColors.textPrimary),
+                                  Icon(CupertinoIcons.doc_fill,
+                                      size: 16, color: AppColors.textPrimary),
                                   SizedBox(width: 8),
                                   Text(
                                     'Questions Only',
